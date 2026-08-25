@@ -179,8 +179,15 @@
   .synthesis-head{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
   .synthesis-title{ font-size:15px; font-weight:700; color:var(--ink); }
   .synthesis-title span{ color:var(--purple); }
-  .synthesis-dl{ padding:9px 16px; font-size:12.5px; background:#fff; border:2px solid var(--line); color:var(--ink); }
+  .synthesis-actions{ display:flex; flex-wrap:wrap; gap:8px; }
+  .synthesis-dl, .synthesis-send{ padding:9px 16px; font-size:12.5px; background:#fff; border:2px solid var(--line); color:var(--ink); }
   .synthesis-dl:hover{ border-color:var(--purple); color:var(--purple); }
+  .synthesis-send{ background:var(--purple); border-color:var(--purple); color:#fff; }
+  .synthesis-send:hover{ opacity:.9; }
+  .synthesis-send:disabled{ opacity:.6; cursor:not-allowed; }
+  .synthesis-status{ margin-top:12px; font-size:12.5px; font-weight:600; color:var(--ink-soft); min-height:16px; }
+  .synthesis-status.ok{ color:#1E7A3E; }
+  .synthesis-status.err{ color:#C0392B; }
   .synthesis-empty{ font-size:14px; color:var(--ink-soft); padding:6px 0; }
   .synthesis-mission{ margin-bottom:16px; }
   .synthesis-mission:last-child{ margin-bottom:0; }
@@ -341,6 +348,11 @@
 </head>
 <body>
 
+<iframe name="hiddenSendFrame" id="hiddenSendFrame" style="display:none;"></iframe>
+<form id="synthesisForm" method="POST" target="hiddenSendFrame" style="display:none;">
+  <input type="hidden" name="payload" id="payloadField">
+</form>
+
 <div class="top-progress"><div class="top-progress-fill" id="topFill"></div></div>
 <div class="brand-lockup">
   <span class="on">OneNote</span>
@@ -378,6 +390,15 @@
 </div>
 
 <script>
+/* ==============================================================
+   CONFIGURATION — collecte des réponses + tableau de bord live
+   Voir le guide "Configuration_Suivi_Live.md" fourni séparément :
+   il explique comment créer la Google Sheet + les 2 scripts
+   (collecte + tableau de bord privé) et où coller l'URL ci-dessous.
+   Tant que c'est vide, seul le téléchargement local fonctionnera.
+   ============================================================== */
+const REPONSES_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzXt86IzO6_HlJJauJCp687s9SGJw2qQbMRBzps-4qzl9F6MCtkbvLuLhkU2TE-iH2C/exec";
+
 /* ============== mini-visuels (repris et adaptés) ============== */
 const ICONS = {
   plus: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>',
@@ -650,9 +671,13 @@ function renderSlide(slide, idx){
         <div class="synthesis-card" id="synthesisCard">
           <div class="synthesis-head">
             <div class="synthesis-title">Synthèse de <span id="synthName">—</span></div>
-            <button class="pill-btn synthesis-dl" id="dlSynthesis">⬇ Télécharger la synthèse</button>
+            <div class="synthesis-actions">
+              <button class="pill-btn synthesis-send" id="sendSynthesis">📤 Envoyer au formateur</button>
+              <button class="pill-btn synthesis-dl" id="dlSynthesis">⬇ Télécharger</button>
+            </div>
           </div>
           <div id="synthesisBody"></div>
+          <div class="synthesis-status" id="synthesisStatus"></div>
         </div>
         <button class="pill-btn cta-start" id="restartBtn">Recommencer</button>
       </div>`;
@@ -792,6 +817,64 @@ function downloadSynthesis(){
   URL.revokeObjectURL(url);
 }
 
+function sendSynthesisToFolder(){
+  const statusEl = document.getElementById('synthesisStatus');
+  const sendBtn = document.getElementById('sendSynthesis');
+  const fullName = `${participantFirst} ${participantLast}`.trim();
+
+  if(!REPONSES_WEBHOOK_URL){
+    statusEl.textContent = "⚠️ Envoi non configuré — utilisez le téléchargement pour l'instant.";
+    statusEl.className = 'synthesis-status err';
+    return;
+  }
+  if(!fullName){
+    statusEl.textContent = "⚠️ Identité manquante, impossible d'envoyer.";
+    statusEl.className = 'synthesis-status err';
+    return;
+  }
+
+  const groups = computeSynthesis();
+  const sujets = groups.map(g =>
+    `${g.title} : ` + g.items.map(it => `[${it.st === 'lost' ? 'Priorité' : 'À revoir'}] ${it.text}`).join(' ; ')
+  ).join(' | ') || 'Aucun sujet à retravailler';
+
+  // Détail structuré (un objet par sujet non-acquis) pour permettre au tableau de bord
+  // d'agréger et de classer les sujets les plus problématiques pour toute l'équipe.
+  const topics = [];
+  groups.forEach(g => g.items.forEach(it => {
+    topics.push({ mission: g.title, sujet: it.text, severite: it.st }); // 'lost' | 'unsure'
+  }));
+
+  const payload = {
+    horodatage: new Date().toISOString(),
+    prenom: participantFirst,
+    nom: participantLast,
+    score: grandTotal(),
+    total: TOTAL_POINTS,
+    sujets,
+    topics
+  };
+
+  sendBtn.disabled = true;
+  statusEl.textContent = 'Envoi en cours…';
+  statusEl.className = 'synthesis-status';
+
+  // Envoi via formulaire caché + iframe plutôt que fetch() : les Web Apps Google
+  // Apps Script répondent par une redirection, et certains navigateurs perdent le
+  // corps d'une requête fetch() lors d'une redirection en mode no-cors. Le
+  // formulaire HTML classique suit la redirection correctement.
+  const form = document.getElementById('synthesisForm');
+  const payloadField = document.getElementById('payloadField');
+  form.action = REPONSES_WEBHOOK_URL;
+  payloadField.value = JSON.stringify(payload);
+  form.submit();
+
+  setTimeout(() => {
+    statusEl.textContent = '✅ Synthèse envoyée au formateur.';
+    statusEl.className = 'synthesis-status ok';
+  }, 1200);
+}
+
 function updateScore(){
   const g = grandTotal();
   scoreNum.textContent = g;
@@ -929,6 +1012,7 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('click', (e) => {
   if(e.target && e.target.id === 'restartBtn') goTo(0);
   if(e.target && e.target.closest && e.target.closest('#dlSynthesis')) downloadSynthesis();
+  if(e.target && e.target.closest && e.target.closest('#sendSynthesis')) sendSynthesisToFolder();
 });
 
 const scoreTotalLbl = document.getElementById('scoreTotalLbl');
