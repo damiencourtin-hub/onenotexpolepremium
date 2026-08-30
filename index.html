@@ -438,6 +438,22 @@
   .admin-section{ margin-bottom:30px; }
   .admin-section-title{ font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
   .admin-section-title .dot{ width:8px; height:8px; border-radius:50%; background:#2FAE4E; box-shadow:0 0 0 4px rgba(47,174,78,.18); }
+  .admin-section-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .admin-section-head .admin-section-title{ margin-bottom:0; }
+
+  .admin-filter-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:18px; padding:12px 14px; background:#fff; border:1px solid var(--line); border-radius:14px; }
+  .admin-filter-row label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); }
+  .admin-filter-row input[type="datetime-local"]{
+    font-family:inherit; font-size:12.5px; padding:7px 10px;
+    border:2px solid var(--line); border-radius:12px; background:#FBFBFD; color:var(--ink); outline:none;
+  }
+  .admin-filter-row input[type="datetime-local"]:focus{ border-color:var(--purple); }
+  .admin-filter-btn{ background:var(--ink); color:#fff; border:none; padding:8px 16px; font-size:12px; }
+  .admin-filter-reset{ background:#F4F4F5; color:var(--ink-soft); border:none; padding:8px 14px; font-size:12px; }
+  .admin-filter-count{ font-size:12px; color:var(--ink-soft); margin-left:auto; }
+
+  .admin-danger-btn{ background:#fff; border:2px solid #F0C4C4; color:#C0392B; padding:7px 14px; font-size:11.5px; }
+  .admin-danger-btn:hover{ background:#FDEAEA; border-color:#C0392B; }
 
   .admin-stats-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:10px; }
   .admin-stat{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; }
@@ -465,6 +481,20 @@
   .topic-row .txt{ flex:1; font-size:13px; color:var(--ink); }
   .topic-row .cnt{ font-size:12px; font-weight:800; color:#fff; background:var(--purple); border-radius:20px; padding:2px 10px; flex:0 0 auto; }
   .topic-row.crit .cnt{ background:#C0392B; }
+
+  .theme-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+  .theme-card{ background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .theme-head{ padding:10px 16px; color:#fff; font-size:13px; font-weight:800; }
+  .theme-body{ padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
+  .theme-row{ display:flex; align-items:center; justify-content:space-between; font-size:12.5px; color:var(--ink-soft); }
+  .theme-row b{ color:var(--ink); font-weight:700; }
+  .theme-bar{ height:7px; border-radius:4px; background:var(--line); overflow:hidden; margin-top:4px; }
+  .theme-bar-fill{ height:100%; transition:width .5s ease; }
+
+  .collab-card .time-detail{ margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
+  .collab-card .time-detail summary{ font-size:11.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; }
+  .collab-card .time-row{ display:flex; justify-content:space-between; font-size:11.5px; color:var(--ink-soft); padding:4px 0; }
+  .collab-card .time-total{ font-size:12px; font-weight:700; color:var(--ink); margin-top:8px; }
 
   .collab-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
   .collab-card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; }
@@ -567,12 +597,27 @@
     </div>
 
     <div class="admin-section">
-      <div class="admin-section-title"><span class="dot"></span>En direct en ce moment</div>
+      <div class="admin-section-head">
+        <div class="admin-section-title"><span class="dot"></span>En direct en ce moment</div>
+        <button class="pill-btn admin-danger-btn" id="adminClearLiveBtn">🗑 Vider le direct</button>
+      </div>
       <div class="live-list" id="liveList"><div class="admin-empty">Connexion au suivi en direct…</div></div>
     </div>
 
     <div class="admin-section">
-      <div class="admin-section-title">Résultats de l'équipe</div>
+      <div class="admin-section-head">
+        <div class="admin-section-title">Résultats de l'équipe</div>
+        <button class="pill-btn admin-danger-btn" id="adminClearResponsesBtn">🗑 Effacer toutes les réponses</button>
+      </div>
+      <div class="admin-filter-row">
+        <label for="filterFrom">Du</label>
+        <input type="datetime-local" id="filterFrom">
+        <label for="filterTo">Au</label>
+        <input type="datetime-local" id="filterTo">
+        <button class="pill-btn admin-filter-btn" id="filterApplyBtn">Filtrer</button>
+        <button class="pill-btn admin-filter-reset" id="filterResetBtn">Réinitialiser</button>
+        <span class="admin-filter-count" id="filterCount"></span>
+      </div>
       <div id="resultsStats"><div class="admin-status-msg">Chargement…</div></div>
     </div>
 
@@ -581,8 +626,13 @@
       <div class="topics-rank" id="topicsRank"></div>
     </div>
 
+    <div class="admin-section" id="themeSection" style="display:none;">
+      <div class="admin-section-title">Synthèse par thématique</div>
+      <div class="theme-grid" id="themeGrid"></div>
+    </div>
+
     <div class="admin-section" id="collabSection" style="display:none;">
-      <div class="admin-section-title">Détail par collaborateur</div>
+      <div class="admin-section-title">Historique des réponses — détail par participant</div>
       <div class="collab-grid" id="collabGrid"></div>
     </div>
   </div>
@@ -1503,6 +1553,8 @@ function renderLiveList(data){
 }
 
 /* ---- résultats consolidés (Google Sheet via Apps Script) ---- */
+let lastResponses = [];
+
 function loadAdminResults(){
   const statsEl = document.getElementById('resultsStats');
   const topicsSection = document.getElementById('topicsSection');
@@ -1512,6 +1564,7 @@ function loadAdminResults(){
     statsEl.innerHTML = '<div class="admin-status-msg err">⚠️ Résultats non configurés — voir le guide pour déployer l\'API du tableau de bord (DASHBOARD_API_URL).</div>';
     topicsSection.style.display = 'none';
     collabSection.style.display = 'none';
+    document.getElementById('themeSection').style.display = 'none';
     return;
   }
 
@@ -1523,11 +1576,124 @@ function loadAdminResults(){
         statsEl.innerHTML = '<div class="admin-status-msg err">❌ ' + escapeHtml(data.error) + '</div>';
         return;
       }
-      renderAdminResults(data);
+      lastResponses = data.responses || [];
+      renderFilteredResults();
     })
     .catch(() => {
       statsEl.innerHTML = '<div class="admin-status-msg err">❌ Impossible de charger les résultats. Vérifiez la connexion ou l\'URL configurée.</div>';
     });
+}
+
+function renderFilteredResults(){
+  const fromVal = document.getElementById('filterFrom').value;
+  const toVal = document.getElementById('filterTo').value;
+  let filtered = lastResponses;
+
+  if(fromVal){
+    const fromDate = new Date(fromVal);
+    filtered = filtered.filter(r => r.date && new Date(r.date) >= fromDate);
+  }
+  if(toVal){
+    const toDate = new Date(toVal);
+    filtered = filtered.filter(r => r.date && new Date(r.date) <= toDate);
+  }
+
+  const countEl = document.getElementById('filterCount');
+  if(fromVal || toVal){
+    countEl.textContent = `${filtered.length} / ${lastResponses.length} réponse(s) affichée(s)`;
+  } else {
+    countEl.textContent = '';
+  }
+
+  renderAdminResults({ responses: filtered });
+}
+
+document.getElementById('filterApplyBtn').addEventListener('click', renderFilteredResults);
+document.getElementById('filterResetBtn').addEventListener('click', () => {
+  document.getElementById('filterFrom').value = '';
+  document.getElementById('filterTo').value = '';
+  renderFilteredResults();
+});
+
+/* ---- réinitialisations ---- */
+document.getElementById('adminClearLiveBtn').addEventListener('click', () => {
+  if(!liveDb){
+    alert("Le suivi en direct n'est pas connecté.");
+    return;
+  }
+  if(!confirm('Vider la liste "en direct en ce moment" ? Cette action est immédiate (les participants réapparaîtront dès leur prochaine action).')) return;
+  liveDb.ref('live').remove().catch(() => alert("Échec de la réinitialisation du direct."));
+});
+
+document.getElementById('adminClearResponsesBtn').addEventListener('click', () => {
+  if(!DASHBOARD_API_URL){
+    alert("L'API des résultats n'est pas configurée.");
+    return;
+  }
+  if(!confirm('Supprimer DÉFINITIVEMENT toutes les réponses envoyées par les DR (scores, sujets à travailler) ? Cette action est irréversible.')) return;
+  const clearUrl = DASHBOARD_API_URL + '&action=clear';
+  document.getElementById('resultsStats').innerHTML = '<div class="admin-status-msg">Suppression en cours…</div>';
+  fetch(clearUrl)
+    .then(r => r.json())
+    .then(res => {
+      if(res.status === 'ok'){
+        lastResponses = [];
+        loadAdminResults();
+      } else {
+        alert('Erreur : ' + (res.error || 'inconnue'));
+        loadAdminResults();
+      }
+    })
+    .catch(() => {
+      alert("Échec de la suppression — vérifiez la connexion et réessayez.");
+      loadAdminResults();
+    });
+});
+
+
+function formatDuration(totalSeconds){
+  const s = Math.max(0, Math.round(totalSeconds || 0));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m > 0 ? `${m} min ${String(r).padStart(2, '0')}s` : `${r}s`;
+}
+
+function renderThemeSynthesis(responses){
+  const section = document.getElementById('themeSection');
+  const grid = document.getElementById('themeGrid');
+  if(!responses.length){
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+  const total = responses.length;
+
+  grid.innerHTML = MISSIONS.map(m => {
+    let critCount = 0, revoirCount = 0, okCount = 0, timeSum = 0, timeN = 0;
+    responses.forEach(r => {
+      const mTopics = (r.topics || []).filter(t => t.mission === m.title);
+      const hasCrit = mTopics.some(t => t.severite === 'lost');
+      const hasRevoir = mTopics.some(t => t.severite === 'unsure');
+      if(hasCrit) critCount++;
+      else if(hasRevoir) revoirCount++;
+      else okCount++;
+      const tm = (r.temps || []).find(t => t.mission === m.title);
+      if(tm && tm.secondes != null){ timeSum += tm.secondes; timeN++; }
+    });
+    const okPct = total ? Math.round(okCount / total * 100) : 0;
+    const avgTime = timeN ? Math.round(timeSum / timeN) : null;
+
+    return `<div class="theme-card">
+      <div class="theme-head" style="background:${m.color}">${escapeHtml(m.title)}</div>
+      <div class="theme-body">
+        <div class="theme-row"><span>✅ Totalement acquis</span><b>${okCount}/${total} (${okPct}%)</b></div>
+        <div class="theme-row"><span>🟠 À revoir chez au moins 1</span><b>${revoirCount}/${total}</b></div>
+        <div class="theme-row"><span>🔴 Priorité chez au moins 1</span><b>${critCount}/${total}</b></div>
+        <div class="theme-row"><span>⏱ Temps moyen</span><b>${avgTime != null ? formatDuration(avgTime) : '—'}</b></div>
+        <div class="theme-bar"><div class="theme-bar-fill" style="width:${okPct}%; background:${m.color}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function renderAdminResults(data){
@@ -1569,6 +1735,8 @@ function renderAdminResults(data){
     topicsSection.style.display = 'none';
   }
 
+  renderThemeSynthesis(responses);
+
   const collabGrid = document.getElementById('collabGrid');
   if(responses.length){
     collabSection.style.display = '';
@@ -1577,6 +1745,8 @@ function renderAdminResults(data){
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .map(r => {
         const topics = r.topics || [];
+        const temps = r.temps || [];
+        const totalSecs = temps.reduce((a, t) => a + (t.secondes || 0), 0);
         const dateStr = r.date ? new Date(r.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
         return `<div class="collab-card">
           <div class="head"><div class="name">${escapeHtml(r.prenom)} ${escapeHtml(r.nom)}</div><div class="score">${r.score}/${r.total}</div></div>
@@ -1584,6 +1754,10 @@ function renderAdminResults(data){
           <div class="topics">
             ${topics.length ? topics.map(t => `<div class="topic ${t.severite}"><span class="tag">${t.severite === 'lost' ? 'Priorité' : 'À revoir'}</span> ${escapeHtml(t.sujet)}</div>`).join('') : '<div class="topic-none">✅ Tous les sujets acquis</div>'}
           </div>
+          ${temps.length ? `<details class="time-detail">
+            <summary>⏱ Temps par mission (${formatDuration(totalSecs)} au total)</summary>
+            ${temps.map(t => `<div class="time-row"><span>${escapeHtml(t.mission)}</span><span>${formatDuration(t.secondes)}</span></div>`).join('')}
+          </details>` : ''}
         </div>`;
       }).join('');
   } else {
