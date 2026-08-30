@@ -646,7 +646,7 @@
    (collecte + tableau de bord privé) et où coller l'URL ci-dessous.
    Tant que c'est vide, seul le téléchargement local fonctionnera.
    ============================================================== */
-const REPONSES_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzXt86IzO6_HlJJauJCp687s9SGJw2qQbMRBzps-4qzl9F6MCtkbvLuLhkU2TE-iH2C/exec";
+const REPONSES_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyZsj7bKe0go59vUw4gYXJYz7qMOR_q89fIdN2ona33M0GJvkPwUQRgjw_TkGTPDK0qhw/exec";
 
 /* ==============================================================
    CONFIGURATION — suivi "en direct" (Firebase Realtime Database)
@@ -1026,15 +1026,14 @@ function renderSlide(slide, idx){
         <div class="synthesis-card" id="synthesisCard">
           <div class="synthesis-head">
             <div class="synthesis-title">Synthèse de <span id="synthName">—</span></div>
-            <div class="synthesis-actions">
-              <button class="pill-btn synthesis-send" id="sendSynthesis">📤 Envoyer au formateur</button>
-              <button class="pill-btn synthesis-dl" id="dlSynthesis">⬇ Télécharger</button>
-            </div>
           </div>
           <div id="synthesisBody"></div>
           <div class="synthesis-status" id="synthesisStatus"></div>
         </div>
-        <button class="pill-btn cta-start" id="restartBtn">Recommencer</button>
+        <div class="final-actions" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:8px;">
+          <button class="pill-btn synthesis-send" id="sendSynthesis">📤 Envoyer mes réponses</button>
+          <button class="pill-btn cta-start" id="restartBtn">Recommencer</button>
+        </div>
       </div>`;
   }
 
@@ -1297,10 +1296,43 @@ function sendSynthesisToFolder(){
   payloadField.value = JSON.stringify(payload);
   form.submit();
 
-  setTimeout(() => {
-    statusEl.textContent = '✅ Synthèse envoyée au formateur.';
-    statusEl.className = 'synthesis-status ok';
-  }, 1200);
+  // Vérifie réellement que la réponse est bien arrivée côté serveur,
+  // plutôt que d'afficher un succès optimiste après un simple délai.
+  if(DASHBOARD_API_URL){
+    setTimeout(() => {
+      fetch(DASHBOARD_API_URL)
+        .then(r => r.json())
+        .then(data => {
+          const responses = data.responses || [];
+          const found = responses.some(r =>
+            r.prenom === payload.prenom &&
+            r.nom === payload.nom &&
+            Math.abs(new Date(r.date) - new Date(payload.horodatage)) < 60000
+          );
+          sendBtn.disabled = false;
+          if(found){
+            statusEl.textContent = '✅ Synthèse bien reçue par le formateur.';
+            statusEl.className = 'synthesis-status ok';
+          } else {
+            statusEl.innerHTML = '⚠️ Envoi non confirmé. <button type="button" id="retrySend" style="text-decoration:underline;background:none;border:none;color:inherit;cursor:pointer;font:inherit;">Réessayer</button>';
+            statusEl.className = 'synthesis-status err';
+            const retryBtn = document.getElementById('retrySend');
+            if(retryBtn) retryBtn.addEventListener('click', sendSynthesisToFolder);
+          }
+        })
+        .catch(() => {
+          sendBtn.disabled = false;
+          statusEl.textContent = '✅ Envoi effectué (confirmation indisponible pour le vérifier).';
+          statusEl.className = 'synthesis-status ok';
+        });
+    }, 2000);
+  } else {
+    setTimeout(() => {
+      sendBtn.disabled = false;
+      statusEl.textContent = '✅ Synthèse envoyée au formateur.';
+      statusEl.className = 'synthesis-status ok';
+    }, 1200);
+  }
 }
 
 function updateScore(){
