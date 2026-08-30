@@ -441,17 +441,6 @@
   .admin-section-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
   .admin-section-head .admin-section-title{ margin-bottom:0; }
 
-  .admin-filter-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:18px; padding:12px 14px; background:#fff; border:1px solid var(--line); border-radius:14px; }
-  .admin-filter-row label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); }
-  .admin-filter-row input[type="datetime-local"]{
-    font-family:inherit; font-size:12.5px; padding:7px 10px;
-    border:2px solid var(--line); border-radius:12px; background:#FBFBFD; color:var(--ink); outline:none;
-  }
-  .admin-filter-row input[type="datetime-local"]:focus{ border-color:var(--purple); }
-  .admin-filter-btn{ background:var(--ink); color:#fff; border:none; padding:8px 16px; font-size:12px; }
-  .admin-filter-reset{ background:#F4F4F5; color:var(--ink-soft); border:none; padding:8px 14px; font-size:12px; }
-  .admin-filter-count{ font-size:12px; color:var(--ink-soft); margin-left:auto; }
-
   .admin-danger-btn{ background:#fff; border:2px solid #F0C4C4; color:#C0392B; padding:7px 14px; font-size:11.5px; }
   .admin-danger-btn:hover{ background:#FDEAEA; border-color:#C0392B; }
 
@@ -608,15 +597,6 @@
       <div class="admin-section-head">
         <div class="admin-section-title">Résultats de l'équipe</div>
         <button class="pill-btn admin-danger-btn" id="adminClearResponsesBtn">🗑 Effacer toutes les réponses</button>
-      </div>
-      <div class="admin-filter-row">
-        <label for="filterFrom">Du</label>
-        <input type="datetime-local" id="filterFrom">
-        <label for="filterTo">Au</label>
-        <input type="datetime-local" id="filterTo">
-        <button class="pill-btn admin-filter-btn" id="filterApplyBtn">Filtrer</button>
-        <button class="pill-btn admin-filter-reset" id="filterResetBtn">Réinitialiser</button>
-        <span class="admin-filter-count" id="filterCount"></span>
       </div>
       <div id="resultsStats"><div class="admin-status-msg">Chargement…</div></div>
     </div>
@@ -1083,7 +1063,7 @@ function wireQuestionSlide(idx){
       applyVisuals();
       updateScore();
       ansBox.classList.add('open');
-      scheduleAutoAdvance(2200);
+      scheduleAutoAdvance(1000);
     };
 
     countInput.onkeydown = (e) => { if(e.key === 'Enter') validateBtn.click(); };
@@ -1119,7 +1099,7 @@ function wireQuestionSlide(idx){
     state[mi][ii] = status[mi][ii] === 'ok';
     applyLockVisuals();
     updateScore();
-    if(status[mi][ii] === 'ok') scheduleAutoAdvance(600);
+    if(status[mi][ii] === 'ok') scheduleAutoAdvance(1000);
   };
 
   unsureBtn.onclick = () => {
@@ -1129,7 +1109,7 @@ function wireQuestionSlide(idx){
     state[mi][ii] = false;
     applyLockVisuals();
     updateScore();
-    scheduleAutoAdvance(2200);
+    scheduleAutoAdvance(1000);
   };
 
   confusedBtn.onclick = () => {
@@ -1140,7 +1120,8 @@ function wireQuestionSlide(idx){
     applyLockVisuals();
     updateScore();
     ansBox.classList.add('open');
-    scheduleAutoAdvance(2800);
+    // Pas d'avancement automatique ici : on laisse la réponse affichée,
+    // l'utilisateur doit cliquer lui-même sur la flèche suivante.
   };
 
   const bonusBtn = document.getElementById(`bonus-${mi}-${ii}`);
@@ -1625,43 +1606,12 @@ function loadAdminResults(){
         return;
       }
       lastResponses = data.responses || [];
-      renderFilteredResults();
+      renderAdminResults({ responses: lastResponses });
     })
     .catch(() => {
       statsEl.innerHTML = '<div class="admin-status-msg err">❌ Impossible de charger les résultats. Vérifiez la connexion ou l\'URL configurée.</div>';
     });
 }
-
-function renderFilteredResults(){
-  const fromVal = document.getElementById('filterFrom').value;
-  const toVal = document.getElementById('filterTo').value;
-  let filtered = lastResponses;
-
-  if(fromVal){
-    const fromDate = new Date(fromVal);
-    filtered = filtered.filter(r => r.date && new Date(r.date) >= fromDate);
-  }
-  if(toVal){
-    const toDate = new Date(toVal);
-    filtered = filtered.filter(r => r.date && new Date(r.date) <= toDate);
-  }
-
-  const countEl = document.getElementById('filterCount');
-  if(fromVal || toVal){
-    countEl.textContent = `${filtered.length} / ${lastResponses.length} réponse(s) affichée(s)`;
-  } else {
-    countEl.textContent = '';
-  }
-
-  renderAdminResults({ responses: filtered });
-}
-
-document.getElementById('filterApplyBtn').addEventListener('click', renderFilteredResults);
-document.getElementById('filterResetBtn').addEventListener('click', () => {
-  document.getElementById('filterFrom').value = '';
-  document.getElementById('filterTo').value = '';
-  renderFilteredResults();
-});
 
 /* ---- réinitialisations ---- */
 document.getElementById('adminClearLiveBtn').addEventListener('click', () => {
