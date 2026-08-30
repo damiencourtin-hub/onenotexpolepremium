@@ -646,7 +646,7 @@
    (collecte + tableau de bord privé) et où coller l'URL ci-dessous.
    Tant que c'est vide, seul le téléchargement local fonctionnera.
    ============================================================== */
-const REPONSES_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyZsj7bKe0go59vUw4gYXJYz7qMOR_q89fIdN2ona33M0GJvkPwUQRgjw_TkGTPDK0qhw/exec";
+const REPONSES_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyhUbrNYt-zNcbGDLvba2h5iK_uoKAmhb0njw0Bv1Z_1MajUYgtWHWtXEv_lEPlcnrmJQ/exec";
 
 /* ==============================================================
    CONFIGURATION — suivi "en direct" (Firebase Realtime Database)
@@ -689,7 +689,7 @@ try {
    - TOTAL_PARTICIPANTS : nombre de DR attendus, pour le taux de réponse.
    ============================================================== */
 const ADMIN_PASSWORD = "PolePremium2026";
-const DASHBOARD_API_URL = "https://script.google.com/macros/s/AKfycbyZsj7bKe0go59vUw4gYXJYz7qMOR_q89fIdN2ona33M0GJvkPwUQRgjw_TkGTPDK0qhw/exec?key=lenomdemafille";
+const DASHBOARD_API_URL = "https://script.google.com/macros/s/AKfycbyhUbrNYt-zNcbGDLvba2h5iK_uoKAmhb0njw0Bv1Z_1MajUYgtWHWtXEv_lEPlcnrmJQ/exec?key=lenomdemafille";
 const TOTAL_PARTICIPANTS = 26;
 
 /* ============== mini-visuels (repris et adaptés) ============== */
@@ -1083,6 +1083,7 @@ function wireQuestionSlide(idx){
       applyVisuals();
       updateScore();
       ansBox.classList.add('open');
+      scheduleAutoAdvance(2200);
     };
 
     countInput.onkeydown = (e) => { if(e.key === 'Enter') validateBtn.click(); };
@@ -1118,6 +1119,7 @@ function wireQuestionSlide(idx){
     state[mi][ii] = status[mi][ii] === 'ok';
     applyLockVisuals();
     updateScore();
+    if(status[mi][ii] === 'ok') scheduleAutoAdvance(600);
   };
 
   unsureBtn.onclick = () => {
@@ -1127,6 +1129,7 @@ function wireQuestionSlide(idx){
     state[mi][ii] = false;
     applyLockVisuals();
     updateScore();
+    scheduleAutoAdvance(2200);
   };
 
   confusedBtn.onclick = () => {
@@ -1137,6 +1140,7 @@ function wireQuestionSlide(idx){
     applyLockVisuals();
     updateScore();
     ansBox.classList.add('open');
+    scheduleAutoAdvance(2800);
   };
 
   const bonusBtn = document.getElementById(`bonus-${mi}-${ii}`);
@@ -1456,6 +1460,18 @@ function validateIdentity(){
 function tryAdvance(){
   if(!validateIdentity()) return;
   goTo(current + 1);
+}
+
+// Avance automatiquement à la question suivante après un choix de réponse,
+// en laissant le temps de lire la réponse révélée. Si l'utilisateur a déjà
+// changé de diapositive entre-temps (navigation manuelle), on n'interfère pas.
+function scheduleAutoAdvance(delayMs){
+  const fromSlide = current;
+  setTimeout(() => {
+    if(current === fromSlide && current < slides.length - 1){
+      goTo(current + 1);
+    }
+  }, delayMs);
 }
 
 document.addEventListener('input', (e) => {
