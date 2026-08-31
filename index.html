@@ -444,6 +444,42 @@
   .admin-danger-btn{ background:#fff; border:2px solid #F0C4C4; color:#C0392B; padding:7px 14px; font-size:11.5px; }
   .admin-danger-btn:hover{ background:#FDEAEA; border-color:#C0392B; }
 
+  /* bandeau priorité n°1 */
+  .hero-priority{
+    background:linear-gradient(135deg, var(--purple), #A044C6);
+    border-radius:20px; padding:22px 24px; margin-bottom:16px; color:#fff;
+    box-shadow:0 14px 34px rgba(119,25,170,.25);
+  }
+  .hero-label{ font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; opacity:.9; margin-bottom:12px; }
+  .hero-list{ display:flex; flex-direction:column; gap:8px; }
+  .hero-item{ display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.14); border-radius:12px; padding:10px 14px; font-size:14px; }
+  .hero-item b{ font-weight:800; }
+  .hero-item .n{ margin-left:auto; font-size:12px; font-weight:800; background:rgba(255,255,255,.22); border-radius:20px; padding:2px 10px; flex:0 0 auto; white-space:nowrap; }
+  .hero-empty{ font-size:14px; opacity:.9; }
+
+  /* coup d'œil */
+  .glance-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:8px; }
+  .glance-item{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; text-align:center; }
+  .glance-n{ font-size:28px; font-weight:800; color:var(--ink); }
+  .glance-l{ font-size:11.5px; color:var(--ink-soft); font-weight:600; margin-top:3px; }
+
+  .admin-status-line{ font-size:12.5px; color:var(--ink-soft); padding:4px 2px 18px; }
+  .admin-status-line.err{ color:#C0392B; }
+
+  /* sections repliables */
+  .admin-collapse{ background:#fff; border:1px solid var(--line); border-radius:16px; margin-bottom:12px; overflow:hidden; }
+  .admin-collapse summary{
+    list-style:none; cursor:pointer; padding:15px 18px; font-size:13.5px; font-weight:700; color:var(--ink);
+    display:flex; align-items:center; gap:10px; user-select:none;
+  }
+  .admin-collapse summary::-webkit-details-marker{ display:none; }
+  .admin-collapse summary::before{ content:'▸'; color:var(--ink-soft); font-size:11px; transition:transform .2s ease; }
+  .admin-collapse[open] summary::before{ transform:rotate(90deg); }
+  .admin-collapse .count-badge{ margin-left:auto; font-size:11.5px; font-weight:800; color:#fff; background:var(--purple); border-radius:20px; padding:2px 10px; }
+  .admin-collapse-body{ padding:0 18px 18px; }
+  .admin-collapse-actions{ display:flex; justify-content:flex-end; margin-bottom:14px; }
+  .topics-rank-title{ font-size:11.5px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin:18px 0 10px; }
+
   .admin-stats-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:10px; }
   .admin-stat{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; }
   .admin-stat .n{ font-size:26px; font-weight:800; color:var(--ink); }
@@ -585,36 +621,60 @@
       </div>
     </div>
 
-    <div class="admin-section">
-      <div class="admin-section-head">
-        <div class="admin-section-title"><span class="dot"></span>En direct en ce moment</div>
-        <button class="pill-btn admin-danger-btn" id="adminClearLiveBtn">🗑 Vider le direct</button>
+    <!-- L'information n°1 : ce qui pose problème à l'équipe -->
+    <div class="hero-priority">
+      <div class="hero-label">🎯 À travailler en priorité avec l'équipe</div>
+      <div class="hero-list" id="heroList"><div class="admin-empty">Chargement…</div></div>
+    </div>
+
+    <!-- Coup d'œil : les 3 chiffres essentiels -->
+    <div class="glance-row">
+      <div class="glance-item">
+        <div class="glance-n" id="glanceParticipation">—</div>
+        <div class="glance-l">ont envoyé leur synthèse</div>
       </div>
-      <div class="live-list" id="liveList"><div class="admin-empty">Connexion au suivi en direct…</div></div>
-    </div>
-
-    <div class="admin-section">
-      <div class="admin-section-head">
-        <div class="admin-section-title">Résultats de l'équipe</div>
-        <button class="pill-btn admin-danger-btn" id="adminClearResponsesBtn">🗑 Effacer toutes les réponses</button>
+      <div class="glance-item">
+        <div class="glance-n" id="glanceScore">—</div>
+        <div class="glance-l">score moyen de l'équipe</div>
       </div>
-      <div id="resultsStats"><div class="admin-status-msg">Chargement…</div></div>
+      <div class="glance-item">
+        <div class="glance-n" id="glanceLive">—</div>
+        <div class="glance-l">en direct maintenant</div>
+      </div>
     </div>
 
-    <div class="admin-section" id="topicsSection" style="display:none;">
-      <div class="admin-section-title">Sujets les plus difficiles pour l'équipe</div>
-      <div class="topics-rank" id="topicsRank"></div>
-    </div>
+    <div class="admin-status-line" id="resultsStatus"></div>
 
-    <div class="admin-section" id="themeSection" style="display:none;">
-      <div class="admin-section-title">Synthèse par thématique</div>
-      <div class="theme-grid" id="themeGrid"></div>
-    </div>
+    <!-- Détails, repliés par défaut -->
+    <details class="admin-collapse">
+      <summary>🟢 Voir qui est en direct en ce moment <span class="count-badge" id="liveCountBadge">0</span></summary>
+      <div class="admin-collapse-body">
+        <div class="admin-collapse-actions">
+          <button class="pill-btn admin-danger-btn" id="adminClearLiveBtn">🗑 Vider le direct</button>
+        </div>
+        <div class="live-list" id="liveList"><div class="admin-empty">Connexion au suivi en direct…</div></div>
+      </div>
+    </details>
 
-    <div class="admin-section" id="collabSection" style="display:none;">
-      <div class="admin-section-title">Historique des réponses — détail par participant</div>
-      <div class="collab-grid" id="collabGrid"></div>
-    </div>
+    <details class="admin-collapse">
+      <summary>📊 Voir le détail par thématique</summary>
+      <div class="admin-collapse-body">
+        <div class="theme-grid" id="themeGrid"></div>
+        <div class="topics-rank-title">Sujet par sujet, du plus au moins fréquent</div>
+        <div class="topics-rank" id="topicsRank"></div>
+      </div>
+    </details>
+
+    <details class="admin-collapse">
+      <summary>📋 Voir chaque réponse, participant par participant <span class="count-badge" id="collabCountBadge">0</span></summary>
+      <div class="admin-collapse-body">
+        <div class="admin-collapse-actions">
+          <button class="pill-btn admin-danger-btn" id="adminClearResponsesBtn">🗑 Effacer toutes les réponses</button>
+        </div>
+        <div class="collab-grid" id="collabGrid"></div>
+      </div>
+    </details>
+
   </div>
 </div>
 
@@ -743,7 +803,7 @@ const MISSIONS = [
         a:"Il se trouve en haut du volet de gauche, juste à droite du mot « Blocs-notes » (et non en bas comme on pourrait le penser).",
         v:()=>VIZ.notebooksAddBtn([{label:'Mon bloc-notes',color:'#0078D4'},{label:'Magasin Paris Sud',color:'#038387'}]) },
       { t:"Identifiez le bouton pour créer un nouvel onglet et une nouvelle page.", p:3,
-        a:"Un « + » à côté des onglets crée une section ; un « + Page » en haut de la colonne des pages crée une page.",
+        a:"Le bouton « + Nouvelle section » à côté des onglets crée une nouvelle section ; le bouton « Ajouter une page » au-dessus de la colonne des pages crée une nouvelle page.",
         v:()=>VIZ.buttonsPair('Section','Page') },
     ]},
   { color:"var(--c2)", title:"Le bloc-notes personnel", subtitle:"Votre espace privé",
@@ -758,9 +818,6 @@ const MISSIONS = [
       { t:"Créez une page de test et écrivez une phrase dedans.", p:4,
         a:"La page doit contenir un titre et au moins une ligne de texte visible dans le corps de la page.",
         extraBonus:{ label:"Bonus : écrivez cette phrase grâce à la dictée vocale", p:5 } },
-      { t:"Vérifiez que ce bloc-notes est bien synchronisé.", p:3,
-        a:"Un message en haut de page confirme l'enregistrement, sans triangle d'alerte orange.",
-        v:()=>VIZ.sync() },
     ]},
   { color:"var(--c3)", title:"Visites Magasin", subtitle:"La mission centrale",
     desc:"Construisez l'outil que vous utiliserez sur le terrain chaque semaine.",
@@ -789,14 +846,14 @@ const MISSIONS = [
     desc:"Un outil bien rangé est un outil qu'on utilise vraiment.",
     items:[
       { t:"Classez vos pages magasin dans l'ordre le plus utile pour vous.", p:4,
-        a:"Clic droit dans la colonne des pages pour trier automatiquement par titre ou par date, ou glissez-déposez une page manuellement.",
+        a:"Il faut utiliser le bouton de tri à côté de l'ajout d'une page.",
         v:()=>VIZ.menu(['Trier par titre','Trier par date de création','Déplacer vers le haut/bas'],1) },
       { t:"Renommez l'onglet « Magasins » si besoin pour plus de clarté.", p:3,
         a:"Un double-clic sur le nom de l'onglet permet de le renommer, par exemple avec le nom de votre secteur.",
         v:()=>VIZ.cursor('Magasins') },
       { t:"Testez la création d'une sous-page (ex : « Actions à suivre »).", p:4,
-        a:"Clic droit sur la page > « Créer une page enfant », ou glissez légèrement la page vers la droite.",
-        v:()=>VIZ.menu(['Créer une page enfant','Copier le lien vers la page','Supprimer'],0) },
+        a:"Clic droit sur la page > « Transformer en sous-page ». Les options « Hausser la sous-page d'un niveau » et « Réduire les sous-pages » permettent ensuite d'ajuster son niveau.",
+        v:()=>VIZ.menu(['Transformer en sous-page','Hausser la sous-page d\'un niveau','Réduire les sous-pages'],0) },
       { t:"Testez la fonction recherche pour retrouver un magasin.", p:4,
         a:"La loupe (ou Ctrl+F) recherche dans la page active ; le menu déroulant élargit la recherche à tous les blocs-notes.",
         v:()=>VIZ.search() },
@@ -1063,7 +1120,8 @@ function wireQuestionSlide(idx){
       applyVisuals();
       updateScore();
       ansBox.classList.add('open');
-      scheduleAutoAdvance(1000);
+      // Pas d'avancement automatique : la réponse reste affichée,
+      // il faut cliquer sur la flèche suivante pour continuer.
     };
 
     countInput.onkeydown = (e) => { if(e.key === 'Enter') validateBtn.click(); };
@@ -1560,11 +1618,15 @@ function initials(prenom, nom){
 function renderLiveList(data){
   const el = document.getElementById('liveList');
   const entries = Object.values(data).sort((a, b) => (b.dernierSignal || 0) - (a.dernierSignal || 0));
+  const now = Date.now();
+  const onlineCount = entries.filter(p => (now - (p.dernierSignal || 0)) < 45000).length;
+  document.getElementById('liveCountBadge').textContent = onlineCount;
+  document.getElementById('glanceLive').textContent = onlineCount;
+
   if(entries.length === 0){
     el.innerHTML = '<div class="admin-empty">Personne ne fait l\'exercice actuellement.</div>';
     return;
   }
-  const now = Date.now();
   el.innerHTML = entries.map(p => {
     const online = (now - (p.dernierSignal || 0)) < 45000;
     const pct = p.totalSlides ? Math.round((p.slideIndex || 0) / p.totalSlides * 100) : 0;
@@ -1585,31 +1647,31 @@ function renderLiveList(data){
 let lastResponses = [];
 
 function loadAdminResults(){
-  const statsEl = document.getElementById('resultsStats');
-  const topicsSection = document.getElementById('topicsSection');
-  const collabSection = document.getElementById('collabSection');
+  const statusEl = document.getElementById('resultsStatus');
 
   if(!DASHBOARD_API_URL){
-    statsEl.innerHTML = '<div class="admin-status-msg err">⚠️ Résultats non configurés — voir le guide pour déployer l\'API du tableau de bord (DASHBOARD_API_URL).</div>';
-    topicsSection.style.display = 'none';
-    collabSection.style.display = 'none';
-    document.getElementById('themeSection').style.display = 'none';
+    statusEl.textContent = "⚠️ Résultats non configurés — voir le guide pour déployer l'API du tableau de bord (DASHBOARD_API_URL).";
+    statusEl.className = 'admin-status-line err';
     return;
   }
 
-  statsEl.innerHTML = '<div class="admin-status-msg">Chargement…</div>';
+  statusEl.textContent = 'Chargement…';
+  statusEl.className = 'admin-status-line';
   fetch(DASHBOARD_API_URL)
     .then(r => r.json())
     .then(data => {
       if(data.error){
-        statsEl.innerHTML = '<div class="admin-status-msg err">❌ ' + escapeHtml(data.error) + '</div>';
+        statusEl.textContent = '❌ ' + data.error;
+        statusEl.className = 'admin-status-line err';
         return;
       }
+      statusEl.textContent = '';
       lastResponses = data.responses || [];
       renderAdminResults({ responses: lastResponses });
     })
     .catch(() => {
-      statsEl.innerHTML = '<div class="admin-status-msg err">❌ Impossible de charger les résultats. Vérifiez la connexion ou l\'URL configurée.</div>';
+      statusEl.textContent = '❌ Impossible de charger les résultats. Vérifiez la connexion ou l\'URL configurée.';
+      statusEl.className = 'admin-status-line err';
     });
 }
 
@@ -1630,7 +1692,9 @@ document.getElementById('adminClearResponsesBtn').addEventListener('click', () =
   }
   if(!confirm('Supprimer DÉFINITIVEMENT toutes les réponses envoyées par les DR (scores, sujets à travailler) ? Cette action est irréversible.')) return;
   const clearUrl = DASHBOARD_API_URL + '&action=clear';
-  document.getElementById('resultsStats').innerHTML = '<div class="admin-status-msg">Suppression en cours…</div>';
+  const statusEl = document.getElementById('resultsStatus');
+  statusEl.textContent = 'Suppression en cours…';
+  statusEl.className = 'admin-status-line';
   fetch(clearUrl)
     .then(r => r.json())
     .then(res => {
@@ -1657,13 +1721,11 @@ function formatDuration(totalSeconds){
 }
 
 function renderThemeSynthesis(responses){
-  const section = document.getElementById('themeSection');
   const grid = document.getElementById('themeGrid');
   if(!responses.length){
-    section.style.display = 'none';
+    grid.innerHTML = '<div class="admin-empty">Aucune réponse pour l\'instant.</div>';
     return;
   }
-  section.style.display = '';
   const total = responses.length;
 
   grid.innerHTML = MISSIONS.map(m => {
@@ -1695,24 +1757,17 @@ function renderThemeSynthesis(responses){
 }
 
 function renderAdminResults(data){
-  const statsEl = document.getElementById('resultsStats');
-  const topicsSection = document.getElementById('topicsSection');
-  const collabSection = document.getElementById('collabSection');
   const responses = data.responses || [];
   const count = responses.length;
   const pct = TOTAL_PARTICIPANTS ? Math.min(100, Math.round(count / TOTAL_PARTICIPANTS * 100)) : 0;
   const avgScore = count ? Math.round(responses.reduce((a, r) => a + (Number(r.score) || 0), 0) / count) : 0;
   const avgTotal = count ? Math.round(responses.reduce((a, r) => a + (Number(r.total) || 100), 0) / count) : 100;
 
-  statsEl.innerHTML = `
-    <div class="admin-stats-row">
-      <div class="admin-stat"><div class="n">${count} / ${TOTAL_PARTICIPANTS}</div><div class="l">Ont envoyé leur synthèse</div></div>
-      <div class="admin-stat"><div class="n">${pct}%</div><div class="l">Taux de réponse</div></div>
-      <div class="admin-stat"><div class="n">${avgScore} / ${avgTotal}</div><div class="l">Score moyen</div></div>
-    </div>
-    <div class="admin-progress-bar"><div class="admin-progress-fill" style="width:${pct}%"></div></div>
-  `;
+  // coup d'œil
+  document.getElementById('glanceParticipation').textContent = `${count} / ${TOTAL_PARTICIPANTS}`;
+  document.getElementById('glanceScore').textContent = count ? `${avgScore} / ${avgTotal}` : '—';
 
+  // sujets à travailler, classés
   const topicCount = {};
   responses.forEach(r => (r.topics || []).forEach(t => {
     const key = (t.mission || '') + ' — ' + (t.sujet || '');
@@ -1720,47 +1775,58 @@ function renderAdminResults(data){
     topicCount[key].n++;
     if(t.severite === 'lost') topicCount[key].crit++;
   }));
-  const topicsSorted = Object.values(topicCount).sort((a, b) => b.n - a.n).slice(0, 12);
+  const topicsSorted = Object.values(topicCount).sort((a, b) => (b.crit - a.crit) || (b.n - a.n));
+
+  // bandeau priorité n°1 : les 3 sujets qui posent le plus problème
+  const heroList = document.getElementById('heroList');
+  if(!count){
+    heroList.innerHTML = '<div class="hero-empty">Pas encore de réponse envoyée par l\'équipe.</div>';
+  } else if(!topicsSorted.length){
+    heroList.innerHTML = '<div class="hero-empty">🎉 Aucun point de blocage identifié pour l\'instant — tout va bien !</div>';
+  } else {
+    heroList.innerHTML = topicsSorted.slice(0, 3).map(t => `
+      <div class="hero-item">
+        ${t.crit > 0 ? '🔴' : '🟠'} <b>${escapeHtml(t.text)}</b>
+        <span class="n">${t.n} DR concerné${t.n > 1 ? 's' : ''}</span>
+      </div>`).join('');
+  }
+
   const topicsRank = document.getElementById('topicsRank');
-  if(topicsSorted.length){
-    topicsSection.style.display = '';
-    topicsRank.innerHTML = topicsSorted.map(t => `
+  topicsRank.innerHTML = topicsSorted.length
+    ? topicsSorted.slice(0, 12).map(t => `
       <div class="topic-row ${t.crit > 0 ? 'crit' : ''}">
         <div class="txt">${escapeHtml(t.text)}</div>
         <div class="cnt">${t.n}</div>
-      </div>`).join('');
-  } else {
-    topicsSection.style.display = 'none';
-  }
+      </div>`).join('')
+    : '<div class="admin-empty">Aucun sujet à travailler identifié pour l\'instant.</div>';
 
   renderThemeSynthesis(responses);
 
+  // historique par participant
+  document.getElementById('collabCountBadge').textContent = count;
   const collabGrid = document.getElementById('collabGrid');
-  if(responses.length){
-    collabSection.style.display = '';
-    collabGrid.innerHTML = responses
-      .slice()
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .map(r => {
-        const topics = r.topics || [];
-        const temps = r.temps || [];
-        const totalSecs = temps.reduce((a, t) => a + (t.secondes || 0), 0);
-        const dateStr = r.date ? new Date(r.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
-        return `<div class="collab-card">
-          <div class="head"><div class="name">${escapeHtml(r.prenom)} ${escapeHtml(r.nom)}</div><div class="score">${r.score}/${r.total}</div></div>
-          <div class="date">${dateStr}</div>
-          <div class="topics">
-            ${topics.length ? topics.map(t => `<div class="topic ${t.severite}"><span class="tag">${t.severite === 'lost' ? 'Priorité' : 'À revoir'}</span> ${escapeHtml(t.sujet)}</div>`).join('') : '<div class="topic-none">✅ Tous les sujets acquis</div>'}
-          </div>
-          ${temps.length ? `<details class="time-detail">
-            <summary>⏱ Temps par mission (${formatDuration(totalSecs)} au total)</summary>
-            ${temps.map(t => `<div class="time-row"><span>${escapeHtml(t.mission)}</span><span>${formatDuration(t.secondes)}</span></div>`).join('')}
-          </details>` : ''}
-        </div>`;
-      }).join('');
-  } else {
-    collabSection.style.display = 'none';
-  }
+  collabGrid.innerHTML = count
+    ? responses
+        .slice()
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .map(r => {
+          const topics = r.topics || [];
+          const temps = r.temps || [];
+          const totalSecs = temps.reduce((a, t) => a + (t.secondes || 0), 0);
+          const dateStr = r.date ? new Date(r.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+          return `<div class="collab-card">
+            <div class="head"><div class="name">${escapeHtml(r.prenom)} ${escapeHtml(r.nom)}</div><div class="score">${r.score}/${r.total}</div></div>
+            <div class="date">${dateStr}</div>
+            <div class="topics">
+              ${topics.length ? topics.map(t => `<div class="topic ${t.severite}"><span class="tag">${t.severite === 'lost' ? 'Priorité' : 'À revoir'}</span> ${escapeHtml(t.sujet)}</div>`).join('') : '<div class="topic-none">✅ Tous les sujets acquis</div>'}
+            </div>
+            ${temps.length ? `<details class="time-detail">
+              <summary>⏱ Temps par mission (${formatDuration(totalSecs)} au total)</summary>
+              ${temps.map(t => `<div class="time-row"><span>${escapeHtml(t.mission)}</span><span>${formatDuration(t.secondes)}</span></div>`).join('')}
+            </details>` : ''}
+          </div>`;
+        }).join('')
+    : '<div class="admin-empty">Aucune réponse pour l\'instant.</div>';
 }
 
 goTo(0);
