@@ -615,6 +615,8 @@
     <div class="admin-dash-head">
       <div class="admin-dash-title">Tableau de bord <span>admin</span></div>
       <div class="admin-dash-actions">
+        <button class="pill-btn admin-btn" id="exportExcelBtn">⇩ Excel</button>
+        <button class="pill-btn admin-btn" id="exportHtmlBtn">⇩ HTML</button>
         <button class="pill-btn admin-btn" id="adminRefreshBtn">↻ Actualiser</button>
         <button class="pill-btn admin-btn" id="adminCloseBtn">Fermer</button>
         <button class="pill-btn admin-btn logout" id="adminLogoutBtn">Se déconnecter</button>
@@ -678,6 +680,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* ==============================================================
    CONFIGURATION — collecte des réponses + tableau de bord live
@@ -1828,6 +1831,106 @@ function renderAdminResults(data){
         }).join('')
     : '<div class="admin-empty">Aucune réponse pour l\'instant.</div>';
 }
+
+/* ---- export Excel / HTML ---- */
+function buildExportRows(){
+  return lastResponses.map(r => {
+    const totalSecs = (r.temps || []).reduce((a, t) => a + (t.secondes || 0), 0);
+    return {
+      Date: r.date ? new Date(r.date).toLocaleString('fr-FR') : '',
+      Prénom: r.prenom || '',
+      Nom: r.nom || '',
+      Score: r.score,
+      Total: r.total,
+      'Sujets à travailler': (r.topics || []).length
+        ? r.topics.map(t => `${t.severite === 'lost' ? 'Priorité' : 'À revoir'} — ${t.mission} — ${t.sujet}`).join(' | ')
+        : 'Tous les sujets acquis',
+      'Temps total': formatDuration(totalSecs)
+    };
+  });
+}
+
+function exportToExcel(){
+  if(!lastResponses.length){ alert("Aucune réponse à exporter pour l'instant."); return; }
+  if(typeof XLSX === 'undefined'){ alert("La bibliothèque d'export Excel n'a pas pu se charger (vérifiez la connexion internet), réessayez."); return; }
+
+  const wsResponses = XLSX.utils.json_to_sheet(buildExportRows());
+
+  const topicCount = {};
+  lastResponses.forEach(r => (r.topics || []).forEach(t => {
+    const key = (t.mission || '') + ' — ' + (t.sujet || '');
+    if(!topicCount[key]) topicCount[key] = { Sujet: key, 'DR concernés': 0, 'Dont priorité': 0 };
+    topicCount[key]['DR concernés']++;
+    if(t.severite === 'lost') topicCount[key]['Dont priorité']++;
+  }));
+  const topicsRows = Object.values(topicCount).sort((a, b) => b['DR concernés'] - a['DR concernés']);
+  const wsTopics = XLSX.utils.json_to_sheet(topicsRows.length ? topicsRows : [{ Sujet: 'Aucun sujet identifié', 'DR concernés': 0, 'Dont priorité': 0 }]);
+
+  const total = lastResponses.length;
+  const themeRows = MISSIONS.map(m => {
+    let crit = 0, revoir = 0, ok = 0;
+    lastResponses.forEach(r => {
+      const mt = (r.topics || []).filter(t => t.mission === m.title);
+      if(mt.some(t => t.severite === 'lost')) crit++;
+      else if(mt.some(t => t.severite === 'unsure')) revoir++;
+      else ok++;
+    });
+    return { Thématique: m.title, 'Totalement acquis': ok, 'À revoir (au moins 1)': revoir, 'Priorité (au moins 1)': crit, 'Sur un total de': total };
+  });
+  const wsThemes = XLSX.utils.json_to_sheet(themeRows);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, wsResponses, 'Réponses');
+  XLSX.utils.book_append_sheet(wb, wsThemes, 'Thématiques');
+  XLSX.utils.book_append_sheet(wb, wsTopics, 'Sujets');
+  XLSX.writeFile(wb, `Resultats_OneNote_${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+
+function exportToHTML(){
+  if(!lastResponses.length){ alert("Aucune réponse à exporter pour l'instant."); return; }
+
+  const rows = buildExportRows();
+  const rowsHtml = rows.map(r => `<tr>
+    <td>${escapeHtml(r.Date)}</td>
+    <td>${escapeHtml(r.Prénom)}</td>
+    <td>${escapeHtml(r.Nom)}</td>
+    <td>${r.Score}/${r.Total}</td>
+    <td>${escapeHtml(r['Sujets à travailler'])}</td>
+    <td>${escapeHtml(r['Temps total'])}</td>
+  </tr>`).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<title>Résultats — Formation OneNote Pôle Premium</title>
+<style>
+  body{ font-family:Arial, Helvetica, sans-serif; margin:32px; color:#1A1523; }
+  h1{ color:#7719AA; margin-bottom:4px; }
+  p.meta{ color:#6B6478; font-size:13px; margin-top:0; }
+  table{ border-collapse:collapse; width:100%; margin-top:18px; }
+  th, td{ border:1px solid #E4E0EA; padding:9px 12px; text-align:left; font-size:13px; vertical-align:top; }
+  th{ background:#7719AA; color:#fff; }
+  tr:nth-child(even){ background:#F8F5FB; }
+</style></head>
+<body>
+  <h1>Résultats — Formation OneNote Pôle Premium</h1>
+  <p class="meta">Exporté le ${new Date().toLocaleString('fr-FR')} — ${rows.length} réponse(s)</p>
+  <table>
+    <thead><tr><th>Date</th><th>Prénom</th><th>Nom</th><th>Score</th><th>Sujets à travailler</th><th>Temps total</th></tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+</body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Resultats_OneNote_${new Date().toISOString().slice(0, 10)}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+document.getElementById('exportHtmlBtn').addEventListener('click', exportToHTML);
 
 goTo(0);
 </script>
