@@ -305,6 +305,14 @@
   .nav-arrow:active{ transform:scale(.92); }
   .nav-arrow[disabled]{ opacity:.25; cursor:default; }
   .nav-arrow svg{ width:16px; height:16px; }
+  .nav-arrow.shake{ animation:navShake .4s ease; }
+  @keyframes navShake{
+    0%, 100%{ transform:translateX(0); }
+    20%{ transform:translateX(-5px); }
+    40%{ transform:translateX(4px); }
+    60%{ transform:translateX(-3px); }
+    80%{ transform:translateX(2px); }
+  }
   .nav-frac{ font-size:12.5px; font-weight:700; color:var(--ink-soft); min-width:54px; text-align:center; }
   .nav-sep{ width:1px; height:22px; background:var(--line); margin:0 2px; }
 
@@ -1123,6 +1131,7 @@ function wireQuestionSlide(idx){
       applyVisuals();
       updateScore();
       ansBox.classList.add('open');
+      refreshNextButtonState();
       // Pas d'avancement automatique : la réponse reste affichée,
       // il faut cliquer sur la flèche suivante pour continuer.
     };
@@ -1160,6 +1169,7 @@ function wireQuestionSlide(idx){
     state[mi][ii] = status[mi][ii] === 'ok';
     applyLockVisuals();
     updateScore();
+    refreshNextButtonState();
     if(status[mi][ii] === 'ok') scheduleAutoAdvance(1000);
   };
 
@@ -1170,6 +1180,7 @@ function wireQuestionSlide(idx){
     state[mi][ii] = false;
     applyLockVisuals();
     updateScore();
+    refreshNextButtonState();
     scheduleAutoAdvance(1000);
   };
 
@@ -1181,6 +1192,7 @@ function wireQuestionSlide(idx){
     applyLockVisuals();
     updateScore();
     ansBox.classList.add('open');
+    refreshNextButtonState();
     // Pas d'avancement automatique ici : on laisse la réponse affichée,
     // l'utilisateur doit cliquer lui-même sur la flèche suivante.
   };
@@ -1424,7 +1436,7 @@ function goTo(idx){
 
   navFrac.textContent = (current + 1) + ' / ' + slides.length;
   prevBtn.disabled = current === 0;
-  nextBtn.disabled = current === slides.length - 1;
+  refreshNextButtonState();
 
   updateScore();
   if(menuOverlay.classList.contains('open')) renderMenu();
@@ -1499,8 +1511,26 @@ function validateIdentity(){
   return ok;
 }
 
+function isCurrentQuestionAnswered(){
+  const s = slides[current];
+  if(s.type !== 'question') return true;
+  return status[s.mi][s.ii] !== null;
+}
+
+function refreshNextButtonState(){
+  const isLast = current === slides.length - 1;
+  nextBtn.disabled = isLast || !isCurrentQuestionAnswered();
+}
+
 function tryAdvance(){
   if(!validateIdentity()) return;
+  if(!isCurrentQuestionAnswered()){
+    nextBtn.classList.remove('shake');
+    void nextBtn.offsetWidth; // relance l'animation même si elle vient de jouer
+    nextBtn.classList.add('shake');
+    setTimeout(() => nextBtn.classList.remove('shake'), 420);
+    return;
+  }
   goTo(current + 1);
 }
 
