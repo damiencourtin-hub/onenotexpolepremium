@@ -224,6 +224,10 @@ h1 em{font-style:italic;color:var(--orchid)}
   .stats{gap:7px}
   .gain{font-size:17px}
 }
+.lock{position:fixed;z-index:20;left:max(14px,env(safe-area-inset-left,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));
+  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--muted);opacity:.5;transition:opacity .3s,transform .3s,color .3s}
+.lock:hover,.lock:focus-visible{opacity:1;color:var(--champagne);transform:translateY(-2px)}
+.lock svg{width:15px;height:15px}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
 }
@@ -245,6 +249,9 @@ h1 em{font-style:italic;color:var(--orchid)}
     <div class="scorebox"><span class="streak" id="streak">série ×2</span><b id="score">0</b><span style="color:var(--muted);font-size:13px">pts</span></div>
   </header>
 
+  <a class="lock glass" id="lock" href="admin.html" aria-label="Accès formateur" title="Accès formateur">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+  </a>
   <main>
     <!-- ACCUEIL -->
     <section class="home" id="home">
@@ -574,7 +581,7 @@ function animateScore(to){
   const step = t=>{ const k=Math.min(1,(t-t0)/d); shownScore=Math.round(from+(to-from)*(1-Math.pow(1-k,3))); $("#score").textContent=shownScore; if(k<1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
-function showView(id){ for(const v of ["home","quiz","result"]) $("#"+v).hidden = v!==id; $("main").scrollTop=0; }
+function showView(id){ for(const v of ["home","quiz","result"]) $("#"+v).hidden = v!==id; $("#lock").hidden = id!=="home"; $("main").scrollTop=0; }
 
 function start(list){
   S = { list, i:0, score:0, streak:0, best:0, answers:[] };
