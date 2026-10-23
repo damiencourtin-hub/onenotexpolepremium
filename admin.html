@@ -144,6 +144,10 @@ button{cursor:pointer}
 .gatebox input{width:100%;border-radius:999px;padding:13px 18px;text-align:center;background:rgba(255,255,255,.07);border:1px solid var(--glass-line);outline:0;font-size:16px}
 .gatebox .btn{margin-top:12px;width:100%;padding:13px}
 .gerr{color:var(--coral);font-size:13px;min-height:18px;margin-top:10px}
+.alert{border-radius:20px;padding:16px 18px;border-color:rgba(255,143,128,.55)!important;line-height:1.55;font-size:14px}
+.alert b{color:var(--coral);display:block;font-size:15px;margin-bottom:4px}
+.alert ol{margin:8px 0 0;padding-left:20px}
+.alert code{font-family:var(--mono);font-size:12px;background:rgba(255,255,255,.08);padding:1px 6px;border-radius:6px;white-space:pre-wrap;display:block;margin-top:6px}
 .confirm{border-radius:18px;padding:14px 16px;margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px}
 .confirm span{flex:1 1 200px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important}}
@@ -171,6 +175,7 @@ button{cursor:pointer}
     <button class="btn glass" id="exportBtn" type="button">Exporter CSV</button>
     <button class="btn glass danger" id="resetBtn" type="button">Nouvelle session</button>
   </header>
+  <div class="alert glass" id="alert" role="alert" hidden></div>
   <div class="confirm glass" id="confirm" hidden>
     <span>Effacer tous les participants et leurs résultats pour démarrer une nouvelle session ? C'est définitif.</span>
     <button class="btn glass" id="cancelReset" type="button">Annuler</button>
@@ -271,7 +276,6 @@ addEventListener("pointermove", e=>{ document.documentElement.style.setProperty(
 
 /* ================= verrou ================= */
 function unlock(){ $("#gate").hidden = true; $("#app").hidden = false; boot(); }
-try{ if(sessionStorage.getItem("qop-admin")==="1") unlock(); }catch(e){}
 function tryPwd(){
   if($("#pwd").value === ADMIN_PASSWORD){ try{ sessionStorage.setItem("qop-admin","1"); }catch(e){} unlock(); }
   else { $("#gerr").textContent = "Mot de passe incorrect."; $("#pwd").value=""; $("#pwd").focus(); }
@@ -286,7 +290,7 @@ function drawQR(el, text, size){
   if(typeof QRCode === "undefined"){ el.innerHTML = `<div class="err">QR indisponible (pas de réseau).<br>Lien : ${esc(text)}</div>`; return; }
   new QRCode(el, { text, width:size, height:size, colorDark:"#140D1C", colorLight:"#FFFFFF", correctLevel: QRCode.CorrectLevel.M });
 }
-function refreshQR(){ const u = quizUrl(); ls.set("qop-url", u); drawQR($("#qr"), u, 600); $("#stageUrl").textContent = u.replace(/^https?:\/\//,""); }
+function refreshQR(){ const u = quizUrl(); checkUrl(); ls.set("qop-url", u); drawQR($("#qr"), u, 600); $("#stageUrl").textContent = u.replace(/^https?:\/\//,""); }
 $("#url").value = ls.get("qop-url") || new URL("./", location.href).href;
 $("#url").addEventListener("change", refreshQR);
 $("#copyBtn").addEventListener("click", ()=>{
@@ -304,15 +308,41 @@ $("#closeStage").addEventListener("click", closeStage);
 addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#stage").hidden) closeStage(); });
 
 /* ================= données en direct ================= */
-let db = null, players = {}, meta = null, lastRanks = new Map(), lastScores = new Map();
+let db = null, players = {}, meta = null, lastRanks = new Map(), lastScores = new Map(), offset = 0;
+const RULES = `{
+  "rules": {
+    "live":        { ".read": true, ".write": true },
+    "quizOneNote": { ".read": true, ".write": true }
+  }
+}`;
+function showAlert(kind){
+  const a = $("#alert");
+  if(!kind){ a.hidden = true; return; }
+  const msgs = {
+    rules: `<b>La base Firebase refuse l'accès au suivi du quiz</b>Les réponses des participants ne peuvent ni être enregistrées ni être lues. Les règles de sécurité de la base sont à mettre à jour (elles expirent automatiquement au bout de 30 jours en « mode test »).
+      <ol><li>Ouvrez console.firebase.google.com et le projet <i>formation-one-note</i>.</li>
+      <li>Menu Realtime Database, onglet <i>Règles</i>.</li>
+      <li>Remplacez tout le contenu par le texte ci-dessous, puis <i>Publier</i>.</li></ol><code>${esc(RULES)}</code>`,
+    lib: `<b>Firebase ne s'est pas chargé</b>Vérifiez la connexion internet de ce PC, ou qu'un pare-feu d'entreprise ne bloque pas www.gstatic.com, puis rechargez la page.`,
+    url: `<b>Le QR code ne pointe pas vers le quiz en ligne</b>Il renvoie vers un fichier de cet ordinateur ou vers une page qui n'est pas reliée au suivi. Collez l'adresse GitHub Pages du quiz dans le champ sous le QR code.`
+  };
+  a.innerHTML = msgs[kind]; a.hidden = false;
+}
+function checkUrl(){ const u = quizUrl(); if(!/^https?:\/\//.test(u) || /claude\.ai/.test(u)) showAlert("url"); else if(!$("#alert").innerHTML.includes("Firebase")) showAlert(null); }
 
 function boot(){
   refreshQR();
+  checkUrl();
   try{ firebase.initializeApp(FIREBASE_CONFIG); db = firebase.database(); }
-  catch(e){ setNet(false, "Firebase indisponible"); render(); return; }
+  catch(e){ setNet(false, "Firebase indisponible"); showAlert("lib"); render(); return; }
+  db.ref(".info/serverTimeOffset").on("value", s=>{ offset = s.val() || 0; });
+  // test d'écriture : révèle tout de suite un problème de règles
+  db.ref(LIVE_ROOT+"/_ping").set(firebase.database.ServerValue.TIMESTAMP)
+    .then(()=>{ if($("#alert").innerHTML.includes("refuse")) showAlert(null); })
+    .catch(()=>{ setNet(false,"Accès refusé par la base"); showAlert("rules"); });
   db.ref(".info/connected").on("value", s=> setNet(!!s.val()));
   db.ref(LIVE_ROOT+"/players").on("value", s=>{ players = s.val() || {}; render(); },
-    err=> setNet(false, "Accès refusé par la base (voir les règles)"));
+    err=>{ setNet(false, "Accès refusé par la base"); showAlert("rules"); render(); });
   db.ref(LIVE_ROOT+"/meta").on("value", s=>{ meta = s.val(); render(); });
   setInterval(render, 5000); // met à jour les statuts "connecté"
 }
@@ -323,11 +353,12 @@ function statusOf(p, now){
   if(p.status==="done") return { key:"done", label:"Terminé", online };
   return online ? { key:"play", label:"En cours", online } : { key:"off", label:"Déconnecté", online };
 }
+function isPlayer(p){ return p && typeof p==="object" && p.name; }
 function asArray(a){ return Array.isArray(a) ? a : (a ? Object.keys(a).sort((x,y)=>x-y).map(k=>a[k]) : []); }
 
 function render(){
-  const now = Date.now();
-  const list = Object.entries(players).map(([id,p])=>({ id, ...p, st:statusOf(p,now), ans:asArray(p.answers) }));
+  const now = Date.now() + offset;
+  const list = Object.entries(players).filter(([,p])=>isPlayer(p)).map(([id,p])=>({ id, ...p, st:statusOf(p,now), ans:asArray(p.answers) }));
   const online = list.filter(p=>p.st.online);
   const playing = list.filter(p=>p.st.key==="play").length;
   const done = list.filter(p=>p.st.key==="done").length;
@@ -412,7 +443,7 @@ $("#exportBtn").addEventListener("click", ()=>{
   const now = Date.now();
   const qs = meta?.questions ? asArray(meta.questions) : [];
   const head = ["Prénom","Statut","Score","Bonnes réponses","Questions répondues","Meilleure série","Début",...qs.map((_,i)=>"Q"+(i+1))];
-  const rows = Object.values(players).map(p=>{
+  const rows = Object.values(players).filter(isPlayer).map(p=>{
     const ans = asArray(p.answers);
     return [p.name, statusOf(p,now).label, p.score||0, p.good||0, p.answered||0, p.best||0,
       p.startedAt ? new Date(p.startedAt).toLocaleString("fr-FR") : "", ...qs.map((_,i)=> ans[i] ? (ans[i].ok?"juste":"faux") : "")];
@@ -423,6 +454,10 @@ $("#exportBtn").addEventListener("click", ()=>{
   a.download = `Quiz_OneNote_resultats_${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
 });
+
+/* démarrage (en dernier : toutes les variables sont prêtes) */
+let remembered = false; try{ remembered = sessionStorage.getItem("qop-admin")==="1"; }catch(e){}
+if(remembered) unlock();
 </script>
 </body>
 </html>

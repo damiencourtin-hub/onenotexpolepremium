@@ -428,15 +428,15 @@ const FIREBASE_CONFIG = {
 };
 const LIVE_ROOT = "quizOneNote";
 const Live = (()=>{
-  let db = null, ref = null, connected = false, beat = 0;
+  let db = null, ref = null, connected = false, denied = false, beat = 0;
   const sid = (()=>{ try{ let v = sessionStorage.getItem("qop-sid"); if(!v){ v = "p_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); sessionStorage.setItem("qop-sid", v); } return v; }catch(e){ return "p_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); } })();
   try{ if(window.firebase && navigator.onLine !== false){ firebase.initializeApp(FIREBASE_CONFIG); db = firebase.database(); } }catch(e){ db = null; }
   const TS = () => firebase.database.ServerValue.TIMESTAMP;
-  const safe = p => { if(p && p.catch) p.catch(()=>{}); };
+  const safe = p => { if(p && p.then) p.then(()=>{ if(denied){ denied=false; paint(); } }, ()=>{ denied = true; paint(); }); };
   function paint(){
     const n = document.getElementById("net"); if(!n) return;
-    n.classList.toggle("live", connected);
-    n.querySelector("span").textContent = connected ? "En direct" : "Hors connexion";
+    n.classList.toggle("live", connected && !denied);
+    n.querySelector("span").textContent = denied ? "Suivi refusé" : (connected ? "En direct" : "Hors connexion");
     const c = document.getElementById("modeChip"); if(c) c.textContent = connected ? "Session en direct" : "Sans réseau";
   }
   if(db){
@@ -464,6 +464,7 @@ const Live = (()=>{
     push(st){
       if(!ref) return;
       safe(ref.update({
+        name: st.name || "", total: st.list.length, status: "playing", online: true,
         answered: st.answers.filter(Boolean).length, score: st.score, streak: st.streak, best: st.best,
         good: st.answers.filter(a=>a&&a.ok).length,
         answers: st.answers.map(a=>({ qi:a.qi, ok:a.ok, pts:a.pts, t:Math.round(a.time*10)/10 })),
