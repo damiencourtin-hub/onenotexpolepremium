@@ -1,0 +1,706 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Quiz OneNote Pôle Premium</title>
+<meta name="theme-color" content="#0E0A14">
+<style>
+/* Layout : une seule scène plein écran ; verre liquide flottant au-dessus d'un fond d'orbes lumineuses.
+   Look unique, sombre, assumé (le verre a besoin d'un fond coloré pour réfracter). */
+:root{
+  color-scheme:dark;
+  --ink:#0E0A14;          /* fond aubergine nuit */
+  --violet:#8B2FC9;       /* violet OneNote, éclairci pour le sombre */
+  --orchid:#C493EA;
+  --champagne:#E9D4A6;    /* accent premium */
+  --mint:#7FDCC6;         /* bonne réponse */
+  --coral:#FF8F80;        /* mauvaise réponse */
+  --text:#F5F1F9;
+  --muted:rgba(245,241,249,.64);
+  --faint:rgba(245,241,249,.38);
+  --glass-fill-a:rgba(255,255,255,.11);
+  --glass-fill-b:rgba(255,255,255,.035);
+  --glass-line:rgba(255,255,255,.15);
+  --glass-hi:rgba(255,255,255,.42);
+  --glass-sheen:rgba(255,255,255,.17);
+  --shadow:rgba(4,2,8,.65);
+  --m:var(--violet);      /* couleur de la mission en cours */
+
+  --display:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,"Hoefler Text",Georgia,serif;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+
+  --mx:.5; --my:.3;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--ink);color:var(--text);font-family:var(--body);font-size:15px;-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--champagne);outline-offset:3px}
+
+#bg,#fx{position:fixed;inset:0;width:100%;height:100%;display:block}
+#bg{z-index:0;filter:saturate(120%)}
+#fx{z-index:50;pointer-events:none}
+
+.app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px}
+main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:grid;place-items:center;padding-block:18px 8px}
+
+/* ---------- verre liquide ---------- */
+.glass{
+  position:relative;isolation:isolate;
+  background:
+    radial-gradient(130% 90% at calc(var(--mx)*100%) calc(var(--my)*100%),var(--glass-sheen),transparent 55%),
+    linear-gradient(155deg,var(--glass-fill-a),var(--glass-fill-b));
+  -webkit-backdrop-filter:blur(26px) saturate(175%);
+  backdrop-filter:blur(26px) saturate(175%);
+  border:1px solid var(--glass-line);
+  box-shadow:inset 0 1px 0 var(--glass-hi),inset 0 -12px 30px -18px rgba(255,255,255,.12),0 30px 60px -28px var(--shadow);
+}
+.glass::before{
+  content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.2px;pointer-events:none;z-index:-1;
+  background:linear-gradient(calc(120deg + var(--mx)*80deg),var(--glass-hi),transparent 38%,transparent 62%,rgba(255,255,255,.22));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+}
+
+/* ---------- barre haute ---------- */
+.bar{display:flex;align-items:center;gap:14px;border-radius:22px;padding:10px 12px 10px 16px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:7px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
+.brand .on{color:var(--orchid)}
+.brand .x{color:var(--faint)}
+.pips{flex:1;display:flex;gap:4px;min-width:120px;align-items:center}
+.pip{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.12);transition:background .4s,box-shadow .4s}
+.pip.now{background:var(--m);box-shadow:0 0 10px var(--m)}
+.pip.ok{background:var(--mint)}
+.pip.ko{background:var(--coral)}
+.scorebox{display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scorebox b{font-size:17px}
+.streak{font-size:12px;font-weight:700;color:var(--ink);background:var(--champagne);border-radius:20px;padding:3px 9px;transform:scale(0);transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.streak.show{transform:scale(1)}
+.offline{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.offline i{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint)}
+
+/* ---------- accueil ---------- */
+.home{width:min(1060px,100%);display:grid;grid-template-columns:1fr;gap:28px;align-items:center}
+@media (min-width:880px){.home{grid-template-columns:1.05fr .95fr}}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--champagne)}
+h1{font-family:var(--display);font-weight:500;font-size:clamp(44px,7vw,84px);line-height:.98;letter-spacing:-.02em;margin:12px 0 16px;text-wrap:balance}
+h1 em{font-style:italic;color:var(--orchid)}
+.lede{color:var(--muted);font-size:17px;line-height:1.55;max-width:46ch;margin:0 0 24px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.chip{border-radius:20px;padding:7px 13px;font-size:13px;color:var(--text)}
+.chip b{font-variant-numeric:tabular-nums}
+.start{display:flex;flex-wrap:wrap;gap:10px;max-width:520px}
+.field{flex:1 1 220px;border-radius:999px;padding:0 6px 0 20px;display:flex;align-items:center}
+.field.err{border-color:var(--coral);animation:shake .45s}
+.field input{flex:1;min-width:0;background:none;border:0;outline:0;padding:15px 0;font-size:16px}
+.field input::placeholder{color:var(--faint)}
+.cta{border:0;border-radius:999px;padding:15px 28px;font-weight:700;font-size:16px;color:var(--ink);
+  background:linear-gradient(180deg,#F6E7C6,var(--champagne));box-shadow:inset 0 1px 0 #fff,0 12px 30px -10px rgba(233,212,166,.6);
+  transition:transform .2s,box-shadow .2s}
+.cta:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 #fff,0 18px 36px -10px rgba(233,212,166,.7)}
+.cta:active{transform:scale(.97)}
+.ghost{border-radius:999px;padding:14px 22px;font-weight:600}
+.hint{font-size:13px;color:var(--coral);min-height:18px;margin-top:10px}
+.history{margin-top:22px;font-size:13px;color:var(--muted)}
+.history ol{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums}
+
+/* pile 3D : la hiérarchie OneNote en couches de verre */
+.stackwrap{height:380px;perspective:1100px;display:grid;place-items:center}
+.stack{position:relative;width:min(300px,72vw);aspect-ratio:1.25;max-width:100%;transform-style:preserve-3d;
+  transform:rotateX(56deg) rotateZ(-34deg);animation:floatStack 9s ease-in-out infinite}
+@keyframes floatStack{0%,100%{transform:rotateX(56deg) rotateZ(-34deg) translateZ(0)}50%{transform:rotateX(52deg) rotateZ(-28deg) translateZ(14px)}}
+.plate{position:absolute;inset:0;border-radius:24px;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.2,.8,.2,1);
+  display:flex;flex-direction:column;justify-content:flex-end;padding:18px 20px}
+.plate .lv{font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--pc)}
+.plate .nm{font-family:var(--display);font-size:22px;font-style:italic}
+.plate::after{content:"";position:absolute;left:20px;top:18px;width:46px;height:6px;border-radius:3px;background:var(--pc);box-shadow:0 0 18px var(--pc)}
+.p1{--pc:var(--orchid);transform:translateZ(0)}
+.p2{--pc:#5FD3CB;transform:translateZ(70px)}
+.p3{--pc:var(--champagne);transform:translateZ(140px)}
+.stackwrap:hover .p2{transform:translateZ(95px)}
+.stackwrap:hover .p3{transform:translateZ(190px)}
+.lines{position:absolute;right:20px;top:18px;display:flex;flex-direction:column;gap:6px;width:40%}
+.lines span{height:5px;border-radius:3px;background:rgba(255,255,255,.22)}
+
+/* ---------- quiz ---------- */
+.quiz{width:min(860px,100%);display:flex;flex-direction:column;gap:18px}
+.qhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mchip{border-radius:20px;padding:7px 14px 7px 10px;font-size:13px;font-weight:650;display:flex;align-items:center;gap:8px}
+.mchip i{width:10px;height:10px;border-radius:50%;background:var(--m);box-shadow:0 0 12px var(--m)}
+.qcount{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;margin-left:auto}
+.timer{width:44px;height:44px;position:relative;flex:0 0 auto}
+.timer svg{transform:rotate(-90deg)}
+.timer circle{fill:none;stroke-width:3.5}
+.timer .t-bg{stroke:rgba(255,255,255,.14)}
+.timer .t-fg{stroke:var(--champagne);stroke-linecap:round}
+.timer span{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+
+.scene{perspective:1500px}
+.tilt{transform-style:preserve-3d;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease-out}
+.entry{transform-style:preserve-3d}
+.entry.in{animation:cardIn .8s cubic-bezier(.2,.9,.25,1) both}
+@keyframes cardIn{from{opacity:0;transform:translate3d(0,50px,-120px) rotateX(-28deg)}to{opacity:1;transform:none}}
+.card{display:grid;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.25,.9,.25,1)}
+.card.flipped{transform:rotateY(180deg)}
+.face{grid-area:1/1;border-radius:30px;padding:clamp(22px,4vw,38px);backface-visibility:hidden;-webkit-backface-visibility:hidden;min-width:0}
+.front{transform:translateZ(2px)}
+.back{transform:rotateY(180deg) translateZ(2px);pointer-events:none;display:flex;flex-direction:column;gap:14px}
+.card.flipped .back{pointer-events:auto}
+.card.flipped .front{pointer-events:none}
+.question{font-family:var(--display);font-weight:500;font-size:clamp(23px,3.2vw,33px);line-height:1.18;margin:0 0 24px;text-wrap:balance}
+.opts{display:grid;grid-template-columns:1fr;gap:11px}
+@media (min-width:720px){.opts{grid-template-columns:1fr 1fr}}
+.opt{text-align:left;border-radius:20px;padding:15px 16px;display:flex;gap:13px;align-items:flex-start;line-height:1.4;
+  transition:transform .25s cubic-bezier(.3,1.4,.5,1),border-color .3s,box-shadow .3s,opacity .3s;transform-style:preserve-3d}
+.opt:hover:not(:disabled){transform:translateY(-3px) translateZ(18px);border-color:rgba(255,255,255,.35)}
+.opt .k{flex:0 0 auto;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:12.5px;font-weight:800;
+  background:rgba(255,255,255,.1);color:var(--muted);font-family:var(--mono)}
+.opt.ok{border-color:var(--mint);box-shadow:inset 0 0 0 1px var(--mint),0 0 34px -6px var(--mint)}
+.opt.ok .k{background:var(--mint);color:var(--ink)}
+.opt.ko{border-color:var(--coral);box-shadow:inset 0 0 0 1px var(--coral);animation:shake .45s}
+.opt.ko .k{background:var(--coral);color:var(--ink)}
+.opt.dim{opacity:.42}
+.opt:disabled{cursor:default}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+
+.verdict{display:flex;align-items:center;gap:12px}
+.vicon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:22px;font-weight:800;color:var(--ink)}
+.verdict.ok .vicon{background:var(--mint);box-shadow:0 0 30px -4px var(--mint)}
+.verdict.ko .vicon{background:var(--coral);box-shadow:0 0 30px -4px var(--coral)}
+.vtitle{font-family:var(--display);font-size:30px;font-style:italic}
+.gain{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:800;font-size:20px;color:var(--champagne);text-align:right}
+.gain small{display:block;font-size:11.5px;font-weight:600;color:var(--muted)}
+.goodans{border-radius:18px;padding:14px 16px;font-size:15px;line-height:1.45}
+.goodans .lbl{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mint);margin-bottom:4px}
+.onv{border-radius:16px;overflow:hidden;background:#FAFAFA;color:#1F1F1F;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:13px;box-shadow:0 14px 30px -14px rgba(0,0,0,.6);max-width:520px}
+.onv-h{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid #E6E6E6;font-weight:700;font-size:14px}
+.onv-h svg{flex:0 0 auto}
+.onv-h .cv{color:#777;font-weight:400}
+.onv-b{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.onv-s{border-right:1px solid #E6E6E6;padding:4px 0}
+.onv-s div,.onv-p div{padding:6px 12px;display:flex;align-items:center;gap:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.onv-s i{flex:0 0 auto;width:5px;height:17px;border-radius:2px 3px 3px 2px;background:var(--t)}
+.onv-s .sel,.onv-p .sel{background:#E3E3E3}
+.onv-p{padding:4px 6px}
+.onv-p .sel{outline:1.5px solid #7B3FBF;outline-offset:-1.5px}
+.onv-s .more{color:#888;padding-left:26px}
+@media (max-width:560px){.onv{font-size:12px}.onv-s div,.onv-p div{white-space:normal;padding:5px 9px;line-height:1.25}}
+.onv-cap{font-size:12px;color:var(--faint);margin-top:6px}
+.expl{color:var(--muted);font-size:15.5px;line-height:1.6;margin:0;max-width:62ch}
+.backfoot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+.kbd{font-size:12px;color:var(--faint)}
+
+/* ---------- résultats ---------- */
+.result{width:min(980px,100%);display:grid;gap:18px;grid-template-columns:1fr}
+@media (min-width:860px){.result{grid-template-columns:.9fr 1.1fr}}
+.panel{border-radius:30px;padding:clamp(22px,3.5vw,34px);min-width:0}
+.ringwrap{display:grid;place-items:center;perspective:900px;margin:6px 0 18px}
+.ring{width:200px;height:200px;position:relative;animation:ringIn 1.2s cubic-bezier(.2,.9,.2,1) both}
+@keyframes ringIn{from{transform:rotateY(-90deg) scale(.7);opacity:0}to{transform:none;opacity:1}}
+.ring svg{transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:10}
+.ring .r-bg{stroke:rgba(255,255,255,.1)}
+.ring .r-fg{stroke:url(#ringgrad);stroke-linecap:round;transition:stroke-dashoffset 1.6s cubic-bezier(.2,.9,.2,1)}
+.ring .in{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .pct{font-family:var(--display);font-size:52px;line-height:1;font-variant-numeric:tabular-nums}
+.ring .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.rtitle{font-family:var(--display);font-size:32px;font-style:italic;text-align:center;margin:0 0 6px}
+.rsub{text-align:center;color:var(--muted);margin:0 0 20px;line-height:1.5}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+.stat{border-radius:18px;padding:13px 10px;text-align:center}
+.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;color:var(--muted)}
+.ractions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.h2{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--champagne);margin:0 0 14px}
+.mrows{display:flex;flex-direction:column;gap:12px;margin-bottom:26px}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:14px}
+.mrow .nm{display:flex;align-items:center;gap:8px}
+.mrow .nm i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.mrow .vl{font-variant-numeric:tabular-nums;color:var(--muted)}
+.mrow .tr{grid-column:1/-1;height:7px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}
+.mrow .tr div{height:100%;width:0;background:var(--c);border-radius:4px;box-shadow:0 0 12px var(--c);transition:width 1.2s cubic-bezier(.2,.9,.2,1)}
+.missed{display:flex;flex-direction:column;gap:10px}
+.miss{border-radius:18px;padding:13px 15px}
+.miss .q{font-weight:650;font-size:14px;line-height:1.4;margin-bottom:5px}
+.miss .a{font-size:13.5px;color:var(--mint);line-height:1.45}
+.allgood{color:var(--mint);font-size:15px}
+
+@media (max-width:560px){
+  .offline{display:none}
+  .stackwrap{height:270px}
+  .stats{gap:7px}
+  .gain{font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+}
+</style>
+
+<canvas id="bg" aria-hidden="true"></canvas>
+<canvas id="fx" aria-hidden="true"></canvas>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><linearGradient id="ringgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C493EA"/><stop offset="1" stop-color="#E9D4A6"/></linearGradient></defs>
+</svg>
+
+<div class="app">
+  <header class="bar glass">
+    <div class="brand"><span class="on">OneNote</span><span class="x">×</span><span>Pôle Premium</span></div>
+    <div class="pips" id="pips" aria-hidden="true"></div>
+    <div class="offline" title="Ce quiz ne fait aucun appel réseau"><i></i>Hors connexion OK</div>
+    <div class="scorebox"><span class="streak" id="streak">série ×2</span><b id="score">0</b><span style="color:var(--muted);font-size:13px">pts</span></div>
+  </header>
+
+  <main>
+    <!-- ACCUEIL -->
+    <section class="home" id="home">
+      <div>
+        <div class="eyebrow">Quiz · Directeurs régionaux</div>
+        <h1>Le quiz <em>OneNote</em></h1>
+        <p class="lede">Vingt et une questions pour vérifier que votre bloc-notes perso et votre bloc-notes « Visites Magasin » sont prêts pour le terrain. Répondez vite : la rapidité et les séries rapportent des points.</p>
+        <div class="chips">
+          <span class="chip glass"><b>21</b> questions</span>
+          <span class="chip glass"><b>5</b> missions</span>
+          <span class="chip glass">≈ <b>10</b> min</span>
+          <span class="chip glass">Sans réseau</span>
+        </div>
+        <div class="start" id="startForm">
+          <label class="field glass"><input id="pname" type="text" placeholder="Votre prénom" autocomplete="given-name" maxlength="30" aria-label="Votre prénom"></label>
+          <button class="cta" type="button" id="startBtn">Commencer</button>
+        </div>
+        <div class="hint" id="hint" role="status"></div>
+        <div class="history" id="history" hidden></div>
+      </div>
+      <div class="stackwrap" aria-hidden="true">
+        <div class="stack">
+          <div class="plate glass p1"><span class="lv">Bloc-notes</span><span class="nm">Visites Magasin</span></div>
+          <div class="plate glass p2"><span class="lv">Section</span><span class="nm">Magasins</span></div>
+          <div class="plate glass p3"><div class="lines"><span></span><span style="width:80%"></span><span style="width:60%"></span></div><span class="lv">Page</span><span class="nm">Magasin centre-ville</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUIZ -->
+    <section class="quiz" id="quiz" hidden>
+      <div class="qhead">
+        <div class="mchip glass"><i></i><span id="mname">Mission</span></div>
+        <div class="qcount" id="qcount">1 / 16</div>
+        <div class="timer" aria-label="Temps restant">
+          <svg width="44" height="44" viewBox="0 0 44 44"><circle class="t-bg" cx="22" cy="22" r="18"/><circle class="t-fg" id="tfg" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="0"/></svg>
+          <span id="tnum">30</span>
+        </div>
+      </div>
+      <div class="scene" id="scene">
+        <div class="tilt" id="tilt">
+          <div class="entry" id="entry">
+            <div class="card" id="card">
+              <div class="face front glass">
+                <h2 class="question" id="qtext"></h2>
+                <div class="opts" id="opts"></div>
+              </div>
+              <div class="face back glass" id="back"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTATS -->
+    <section class="result" id="result" hidden>
+      <div class="panel glass">
+        <div class="ringwrap">
+          <div class="ring">
+            <svg width="200" height="200" viewBox="0 0 200 200"><circle class="r-bg" cx="100" cy="100" r="86"/><circle class="r-fg" id="rfg" cx="100" cy="100" r="86" stroke-dasharray="540.4" stroke-dashoffset="540.4"/></svg>
+            <div class="in"><div class="pct" id="rpct">0%</div><div class="sub" id="rcount">0 / 16 bonnes réponses</div></div>
+          </div>
+        </div>
+        <p class="rtitle" id="rtitle"></p>
+        <p class="rsub" id="rsub"></p>
+        <div class="stats">
+          <div class="stat glass"><b id="sScore">0</b><span>points</span></div>
+          <div class="stat glass"><b id="sStreak">0</b><span>meilleure série</span></div>
+          <div class="stat glass"><b id="sTime">0 s</b><span>temps moyen</span></div>
+        </div>
+        <div class="ractions">
+          <button class="cta" id="retryMissed" type="button">Revoir mes erreurs</button>
+          <button class="ghost glass" id="replay" type="button">Rejouer tout</button>
+          <button class="ghost glass" id="toHome" type="button">Accueil</button>
+        </div>
+      </div>
+      <div class="panel glass">
+        <h3 class="h2">Par mission</h3>
+        <div class="mrows" id="mrows"></div>
+        <h3 class="h2">À retravailler</h3>
+        <div class="missed" id="missed"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* =================================================================
+   BANQUE DE QUESTIONS — à modifier librement.
+   Pour chaque question : la PREMIÈRE option est toujours la bonne
+   réponse (l'ordre est mélangé automatiquement à l'affichage).
+   m = numéro de mission (0 à 4).
+   ================================================================= */
+const MISSIONS = [
+  { title:"L'exploration",          color:"#B26BE3" },
+  { title:"Le bloc-notes personnel", color:"#3CC4BC" },
+  { title:"Visites Magasin",         color:"#F29A5C" },
+  { title:"Le rangement",            color:"#7ACB6E" },
+  { title:"Le terrain, sur mobile",  color:"#E77BD6" },
+];
+
+const QUESTIONS = [
+  { m:0, q:"Où retrouvez-vous la liste de tous vos blocs-notes ?",
+    o:["Dans le volet de gauche, les uns sous les autres","Dans le ruban, onglet Affichage","Dans la colonne des pages, à droite","Uniquement dans OneDrive, en dehors de OneNote"],
+    e:"Le volet de gauche liste tous les blocs-notes de votre compte. Un clic sur l'un d'eux affiche ses sections." },
+  { m:0, q:"Quelle est la bonne hiérarchie OneNote, du plus grand au plus petit ?",
+    o:["Bloc-notes › Section › Page › Sous-page","Section › Bloc-notes › Page › Sous-page","Bloc-notes › Page › Section › Sous-page","Page › Section › Bloc-notes › Sous-page"],
+    e:"Pensez à un classeur : le bloc-notes est le classeur, les sections sont les intercalaires, les pages sont les feuilles." },
+  { m:0, q:"Où se trouve le bouton pour créer un nouveau bloc-notes ?",
+    o:["Le « + » en haut du volet, à droite du mot « Blocs-notes »","Tout en bas du volet de gauche","Dans le menu du clic droit sur une page","Dans l'onglet Dessin du ruban"],
+    e:"Il est en haut du volet de gauche, juste à droite du mot « Blocs-notes », et non en bas comme on pourrait le penser." },
+
+  { m:1, q:"Pourquoi créer un bloc-notes personnel séparé de « Visites Magasin » ?",
+    o:["Pour isoler vos notes privées de vos comptes rendus terrain","Parce qu'un bloc-notes ne peut contenir qu'une section","Parce que OneNote limite le nombre de pages","Pour pouvoir l'imprimer plus facilement"],
+    e:"Deux espaces, deux usages : vous retrouvez plus vite, et vous pourrez partager vos visites sans exposer vos notes de réunion." },
+  { m:1, q:"Vous venez d'écrire dans une page. Que faites-vous pour ne rien perdre ?",
+    o:["Rien : OneNote enregistre automatiquement","Ctrl+S après chaque modification","Fichier › Enregistrer sous","Exporter la page en PDF"],
+    e:"Il n'y a pas de bouton Enregistrer. Chaque saisie est sauvegardée puis synchronisée sur votre compte professionnel." },
+  { m:1, q:"Comment saisir une note sans taper au clavier ?",
+    o:["Avec le bouton « Dicter » de l'onglet Accueil","En collant un fichier audio dans la page","Avec Révision › Orthographe","C'est impossible dans OneNote"],
+    e:"La dictée transcrit votre voix en texte, pratique juste après un échange en magasin. Elle a besoin d'une connexion pour fonctionner." },
+
+  { m:2, q:"Dans votre bloc-notes de visites, où se trouve le modèle de synthèse ?",
+    o:["Dans une section dédiée, « Synthèse de visite vierge », en haut de la liste","Dans chaque section magasin, en dernière page","Dans votre bloc-notes personnel","Nulle part : on retape la trame à chaque visite"],
+    e:"Le modèle a sa propre section, placée en haut juste après « Région globale ». Il est ainsi toujours au même endroit." },
+  { m:2, q:"Quelle est la bonne méthode pour démarrer la synthèse d'une nouvelle visite ?",
+    o:["Clic droit sur la page « Synthèse de visite à copier » › « Déplacer ou copier » vers la section du magasin, puis renommer","Créer une page blanche et retaper la structure","Écrire directement dans la page « Synthèse de visite à copier »","Coller une capture d'écran de la trame"],
+    e:"Copier le modèle garantit la même structure d'une visite et d'un magasin à l'autre, en quelques secondes." },
+  { m:2, q:"Pourquoi ne jamais remplir directement la page « Synthèse de visite à copier » ?",
+    o:["Elle doit rester vide pour servir de modèle à chaque copie","Elle est en lecture seule","Elle s'efface à chaque synchronisation","Elle n'est pas visible sur mobile"],
+    e:"Un modèle rempli, c'est un modèle perdu : la copie suivante embarquerait les notes d'un autre magasin." },
+  { m:2, q:"Comment organiser le bloc-notes des visites magasin ?",
+    o:["Une section par magasin, avec une page par visite","Une seule page pour tous les magasins","Un bloc-notes par magasin","Une section par visite"],
+    e:"Chaque magasin a sa section, avec la couleur de son enseigne. Chaque visite y ajoute une page « Synthèse de visite » : l'historique du magasin tient en un clic.",
+    v:"onenote" },
+  { m:2, q:"Dans l'en-tête de la « Synthèse de visite », que renseignez-vous ?",
+    o:["Magasin visité, date, contexte / interlocuteur et objectifs de visite","Le CA du jour et le nombre de vendeurs présents","Uniquement le nom du magasin","La liste des actions à mener"],
+    e:"L'en-tête pose le cadre avant tout constat : où, quand, avec qui et pourquoi vous venez." },
+  { m:2, q:"Où notez-vous le PAC et les KPI's du magasin ?",
+    o:["Dans « Point économique à date »","Dans « Gestion magasin »","Dans « Autres »","Dans « Message du RR »"],
+    e:"Le point économique ouvre la synthèse, juste avant le point qualitatif (CRM, services connectés, Wizville)." },
+  { m:2, q:"Comment sont construites les rubriques Animation commerciale, Environnement, Services connectés, Gestion magasin et Autres ?",
+    o:["En deux colonnes : Constat à gauche, Actions en face","En points forts et points faibles","Avec une note sur 10 par rubrique","En texte libre, sans structure"],
+    e:"Chaque constat appelle son action, sur la même ligne : rien ne reste sans suite." },
+  { m:2, q:"La vitrine ne respecte pas le plan merchandising. Dans quelle rubrique l'inscrivez-vous ?",
+    o:["Environnement (magasin et vitrines / marketing / merchandising)","Animation commerciale","Gestion magasin (organisation / flux / réserve / RH)","Services connectés / CRM / Wizville"],
+    e:"Vitrines, marketing et merchandising relèvent de l'Environnement. Le constat va à gauche, l'action corrective en face." },
+  { m:2, q:"Par quoi se termine chaque synthèse de visite ?",
+    o:["Le plan d'action / engagements, puis le message du RR","La signature du directeur de magasin","La note globale du magasin","La liste des photos prises pendant la visite"],
+    e:"Le plan d'action reprend les engagements pris pendant la visite. Le message du RR conclut la synthèse."},
+
+  { m:3, q:"Comment faire de « Actions à suivre » une sous-page d'un magasin ?",
+    o:["Clic droit sur la page › « Transformer en sous-page »","La glisser dans le volet des blocs-notes","Double-cliquer sur son titre","Insertion › Sous-page"],
+    e:"La page se décale sous la page magasin. « Hausser la sous-page d'un niveau » la remonte si besoin." },
+  { m:3, q:"Comment renommer un onglet de section ?",
+    o:["Double-clic sur son nom, puis saisir le nouveau nom","Le supprimer et le recréer","Fichier › Propriétés","C'est impossible une fois créé"],
+    e:"Un double-clic suffit, par exemple pour remplacer « Magasins » par le nom de votre secteur." },
+  { m:3, q:"Vous cherchez un magasin dans tous vos blocs-notes. Que faites-vous ?",
+    o:["Loupe de recherche, en élargissant la portée à « Tous les blocs-notes »","Ctrl+F suffit dans tous les cas","Ouvrir chaque section une à une","Rechercher dans l'Explorateur Windows"],
+    e:"Ctrl+F reste limité à la page ouverte. Le menu de portée de la recherche l'étend à tous vos blocs-notes." },
+
+  { m:4, q:"Pourquoi « Visites Magasin » apparaît-il tout seul sur votre smartphone ?",
+    o:["Il est lié au même compte professionnel et synchronisé","Il faut se l'envoyer par mail","Il faut brancher le téléphone au PC","Il faut le recréer sur le téléphone"],
+    e:"Même compte pro sur le PC et le téléphone : le bloc-notes et ses pages se synchronisent sans aucune manipulation." },
+  { m:4, q:"En magasin, comment ajouter une photo d'implantation à la page ?",
+    o:["Icône appareil photo dans la page, depuis l'appli mobile","Prendre la photo puis se l'envoyer par mail","Uniquement depuis le PC","En passant par la section « Trame vierge »"],
+    e:"L'appareil photo insère l'image directement dans la page du magasin, au bon endroit, sans transfert." },
+  { m:4, q:"Plus de réseau dans la réserve : que se passe-t-il ?",
+    o:["Les pages déjà ouvertes restent modifiables et se synchronisent au retour du réseau","Toutes vos notes sont perdues","OneNote passe en lecture seule","Il faudra tout ressaisir sur le PC"],
+    e:"OneNote garde en cache les pages consultées. Ouvrez la page du magasin avant d'arriver, elle vous suivra même sans signal." },
+];
+
+/* ================= réglages ================= */
+const TIME = 30;            // secondes par question
+const BASE = 100;           // points d'une bonne réponse
+const SPEED_MAX = 50;       // bonus rapidité max
+const STREAK_STEP = 10;     // bonus par réponse consécutive
+const STORE_KEY = "onenote-quiz-pp";
+
+/* ================= utilitaires ================= */
+const $ = s => document.querySelector(s);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }catch(e){ return {}; } },
+  set(v){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(v)); }catch(e){} }
+};
+function hexToRgb(h){ const n=parseInt(h.slice(1),16); return [n>>16&255,n>>8&255,n&255]; }
+
+/* ================= fond : orbes lumineuses ================= */
+const bg = $("#bg"), bctx = bg.getContext("2d");
+const orbs = [
+  { c:[139,47,201], a:.62, x:.22, y:.25, r:.55, sx:.00011, sy:.00009, p:0 },
+  { c:[196,147,234], a:.34, x:.80, y:.20, r:.40, sx:.00008, sy:.00013, p:2 },
+  { c:[233,212,166], a:.24, x:.70, y:.85, r:.45, sx:.00010, sy:.00007, p:4 },
+  { c:[60,196,188],  a:.26, x:.12, y:.85, r:.38, sx:.00012, sy:.00010, p:1 },
+  { c:[178,107,227], a:.45, x:.50, y:.55, r:.36, sx:.00006, sy:.00011, p:3 }, // suit la mission
+];
+let targetMissionRgb = hexToRgb(MISSIONS[0].color);
+function sizeCanvas(c, scale){ const d = Math.min(devicePixelRatio||1, 2)*scale; c.width = innerWidth*d; c.height = innerHeight*d; return d; }
+let bgScale = sizeCanvas(bg, .5);
+function drawBg(t){
+  const W=bg.width, H=bg.height, M=Math.max(W,H);
+  bctx.globalCompositeOperation="source-over";
+  bctx.fillStyle="#0E0A14"; bctx.fillRect(0,0,W,H);
+  bctx.globalCompositeOperation="lighter";
+  const mo = orbs[4];
+  mo.c = mo.c.map((v,i)=> v + (targetMissionRgb[i]-v)*0.03);
+  for(const o of orbs){
+    const x=(o.x+Math.sin(t*o.sx+o.p)*.12)*W, y=(o.y+Math.cos(t*o.sy+o.p)*.12)*H, r=o.r*M;
+    const g=bctx.createRadialGradient(x,y,0,x,y,r);
+    const [R,G,B]=o.c.map(Math.round);
+    g.addColorStop(0,`rgba(${R},${G},${B},${o.a})`); g.addColorStop(1,`rgba(${R},${G},${B},0)`);
+    bctx.fillStyle=g; bctx.fillRect(0,0,W,H);
+  }
+}
+function bgLoop(t){ drawBg(t); if(!reduce) requestAnimationFrame(bgLoop); }
+requestAnimationFrame(bgLoop);
+
+/* ================= effets : éclats de verre ================= */
+const fx = $("#fx"), fctx = fx.getContext("2d");
+let fxScale = sizeCanvas(fx, 1), parts = [], fxRunning = false;
+addEventListener("resize", ()=>{ bgScale = sizeCanvas(bg,.5); fxScale = sizeCanvas(fx,1); if(reduce) drawBg(0); });
+function burst(x, y, colors, n=46){
+  if(reduce) return;
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, s=3+Math.random()*7;
+    parts.push({x:x*fxScale,y:y*fxScale,vx:Math.cos(a)*s*fxScale,vy:(Math.sin(a)*s-4)*fxScale,life:1,
+      rot:Math.random()*6,vr:(Math.random()-.5)*.4,w:(4+Math.random()*9)*fxScale,c:colors[i%colors.length]});
+  }
+  if(!fxRunning){ fxRunning=true; requestAnimationFrame(fxLoop); }
+}
+function fxLoop(){
+  fctx.clearRect(0,0,fx.width,fx.height);
+  parts = parts.filter(p=>p.life>0);
+  for(const p of parts){
+    p.vy += .32*fxScale; p.x+=p.vx; p.y+=p.vy; p.vx*=.985; p.rot+=p.vr; p.life-=.016;
+    fctx.save(); fctx.translate(p.x,p.y); fctx.rotate(p.rot); fctx.scale(1, Math.abs(Math.cos(p.rot*1.7))+.15);
+    fctx.globalAlpha=Math.max(p.life,0); fctx.fillStyle=p.c;
+    fctx.beginPath(); fctx.moveTo(0,-p.w/2); fctx.lineTo(p.w/2,p.w/3); fctx.lineTo(-p.w/2,p.w/3); fctx.closePath(); fctx.fill();
+    fctx.restore();
+  }
+  if(parts.length) requestAnimationFrame(fxLoop); else { fxRunning=false; fctx.clearRect(0,0,fx.width,fx.height); }
+}
+
+/* ================= reflets et inclinaison 3D ================= */
+const root = document.documentElement, tilt = $("#tilt"), scene = $("#scene");
+addEventListener("pointermove", e=>{
+  root.style.setProperty("--mx", (e.clientX/innerWidth).toFixed(3));
+  root.style.setProperty("--my", (e.clientY/innerHeight).toFixed(3));
+  if(reduce || $("#quiz").hidden || e.pointerType!=="mouse") return;
+  const r = scene.getBoundingClientRect();
+  const dx=(e.clientX-(r.left+r.width/2))/r.width, dy=(e.clientY-(r.top+r.height/2))/r.height;
+  tilt.style.setProperty("--ry", (Math.max(-.6,Math.min(.6,dx))*9).toFixed(2)+"deg");
+  tilt.style.setProperty("--rx", (Math.max(-.6,Math.min(.6,-dy))*7).toFixed(2)+"deg");
+});
+
+/* ================= état ================= */
+let S = null, timerRaf = 0, tStart = 0, locked = false, shownScore = 0;
+
+function setMission(mi){
+  const col = MISSIONS[mi].color;
+  root.style.setProperty("--m", col);
+  targetMissionRgb = hexToRgb(col);
+  $("#mname").textContent = `Mission ${mi+1} · ${MISSIONS[mi].title}`;
+}
+function renderPips(){
+  $("#pips").innerHTML = S.list.map((qi,i)=>{
+    const a = S.answers[i]; const cls = a ? (a.ok?"ok":"ko") : (i===S.i?"now":"");
+    return `<div class="pip ${cls}"></div>`;
+  }).join("");
+}
+function animateScore(to){
+  const from = shownScore, t0 = performance.now(), d = reduce?1:700;
+  const step = t=>{ const k=Math.min(1,(t-t0)/d); shownScore=Math.round(from+(to-from)*(1-Math.pow(1-k,3))); $("#score").textContent=shownScore; if(k<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function showView(id){ for(const v of ["home","quiz","result"]) $("#"+v).hidden = v!==id; $("main").scrollTop=0; }
+
+function start(list){
+  S = { list, i:0, score:0, streak:0, best:0, answers:[] };
+  shownScore = 0; $("#score").textContent = "0"; $("#streak").classList.remove("show");
+  showView("quiz"); renderQuestion();
+}
+
+function renderQuestion(){
+  locked = false;
+  const qi = S.list[S.i], Q = QUESTIONS[qi];
+  setMission(Q.m);
+  $("#qcount").textContent = `${S.i+1} / ${S.list.length}`;
+  const order = shuffle(Q.o.map((t,k)=>({t,k})));
+  S.order = order;
+  $("#qtext").textContent = Q.q;
+  $("#opts").innerHTML = order.map((o,j)=>`<button class="opt glass" type="button" data-j="${j}"><span class="k">${"ABCD"[j]}</span><span>${esc(o.t)}</span></button>`).join("");
+  $("#opts").querySelectorAll(".opt").forEach(b=> b.addEventListener("click", ()=>choose(+b.dataset.j)));
+  // retourne la carte sans animation puis la fait entrer
+  const card = $("#card"), entry = $("#entry");
+  card.style.transition="none"; card.classList.remove("flipped"); void card.offsetWidth; card.style.transition="";
+  entry.classList.remove("in"); void entry.offsetWidth; entry.classList.add("in");
+  renderPips();
+  startTimer();
+  setTimeout(()=>{ const f=$("#opts .opt"); if(f && matchMedia("(pointer:fine)").matches) f.focus({preventScroll:true}); }, 50);
+}
+
+function startTimer(){
+  cancelAnimationFrame(timerRaf); tStart = performance.now();
+  const fg = $("#tfg"), num = $("#tnum");
+  const tick = t=>{
+    const left = Math.max(0, TIME - (t-tStart)/1000);
+    fg.style.strokeDashoffset = (113.1*(1-left/TIME)).toFixed(1);
+    fg.style.stroke = left < 8 ? "var(--coral)" : "var(--champagne)";
+    num.textContent = Math.ceil(left);
+    if(left>0 && !locked) timerRaf = requestAnimationFrame(tick);
+    else if(left<=0 && !locked) choose(-1);
+  };
+  timerRaf = requestAnimationFrame(tick);
+}
+
+function onenoteVisual(){
+  const S = [["Région globale","#A21C9C"],["Synthèse de visite vierge","#3B8F3E",1],["SRZ XXXXX","#C81E7E"],["CRLL XXXXX","#1F4E8C"],["CRLL XXXXX","#1F4E8C"],["CRLL XXXXX","#1F4E8C"],["Morgan XXXXX","#D7312A"],["Morgan XXXXX","#D7312A"]];
+  return `<figure style="margin:0"><div class="onv" role="img" aria-label="Exemple d'organisation OneNote : une section par magasin, une page par visite">
+    <div class="onv-h"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="1" width="12" height="16" rx="2" fill="#7B3FBF"/><rect x="5" y="4" width="6" height="2" rx="1" fill="#fff"/><rect x="15" y="4" width="2" height="2" rx="1" fill="#7B3FBF"/><rect x="15" y="8" width="2" height="2" rx="1" fill="#7B3FBF"/><rect x="15" y="12" width="2" height="2" rx="1" fill="#7B3FBF"/></svg>Pôle Premium XXXXX <span class="cv">⌄</span></div>
+    <div class="onv-b"><div class="onv-s">${S.map(([n,c,sel])=>`<div class="${sel?"sel":""}" style="--t:${c}"><i></i>${n}</div>`).join("")}<div class="more">…</div></div>
+    <div class="onv-p"><div>Synthèse de visite</div><div class="sel">Synthèse de visite à copier</div></div></div>
+  </div><figcaption class="onv-cap">Sections à gauche (une par magasin), pages à droite (une par visite).</figcaption></figure>`;
+}
+function choose(j){
+  if(locked) return; locked = true;
+  cancelAnimationFrame(timerRaf);
+  const elapsed = Math.min(TIME,(performance.now()-tStart)/1000);
+  const qi = S.list[S.i], Q = QUESTIONS[qi];
+  const ok = j>=0 && S.order[j].k===0;
+  const btns = [...$("#opts").querySelectorAll(".opt")];
+  btns.forEach((b,k)=>{ b.disabled=true; const isGood=S.order[k].k===0;
+    if(isGood) b.classList.add("ok"); else if(k===j) b.classList.add("ko"); else b.classList.add("dim"); });
+
+  let pts=0, speed=0, combo=0;
+  if(ok){
+    S.streak++; S.best=Math.max(S.best,S.streak);
+    speed = Math.round(SPEED_MAX*(1-elapsed/TIME));
+    combo = Math.min(50, STREAK_STEP*(S.streak-1));
+    pts = BASE+speed+combo;
+    const r = btns[j].getBoundingClientRect();
+    burst(r.left+r.width/2, r.top+r.height/2, ["#7FDCC6","#E9D4A6","#C493EA","#ffffff"]);
+  } else S.streak = 0;
+  S.score += pts;
+  S.answers[S.i] = { qi, ok, pts, time:elapsed };
+  animateScore(S.score);
+  const st=$("#streak"); st.textContent=`série ×${S.streak}`; st.classList.toggle("show", S.streak>=2);
+  renderPips();
+
+  const good = Q.o[0];
+  const title = ok ? ["Exact","Bien vu","Parfait","Juste"][Math.random()*4|0] : (j<0 ? "Temps écoulé" : "Pas tout à fait");
+  const isLast = S.i===S.list.length-1;
+  $("#back").innerHTML = `
+    <div class="verdict ${ok?"ok":"ko"}">
+      <div class="vicon">${ok?"✓":"×"}</div>
+      <div class="vtitle">${title}</div>
+      <div class="gain">+${pts}<small>${ok?`base ${BASE} · vitesse ${speed}${combo?` · série ${combo}`:""}`:"aucun point"}</small></div>
+    </div>
+    ${ok?"":`<div class="goodans glass"><div class="lbl">Bonne réponse</div>${esc(good)}</div>`}
+    <p class="expl">${esc(Q.e)}</p>
+    ${Q.v==="onenote" ? onenoteVisual() : ""}
+    <div class="backfoot"><span class="kbd">Entrée pour continuer</span>
+      <button class="cta" type="button" id="nextBtn">${isLast?"Voir mon résultat":"Question suivante"}</button></div>`;
+  $("#nextBtn").addEventListener("click", next);
+  setTimeout(()=>{ $("#card").classList.add("flipped"); setTimeout(()=>$("#nextBtn")?.focus({preventScroll:true}), reduce?0:500); }, ok?650:1000);
+}
+
+function next(){
+  if(!locked) return;
+  if(S.i < S.list.length-1){ S.i++; renderQuestion(); } else showResult();
+}
+
+function showResult(){
+  showView("result");
+  const n = S.list.length, good = S.answers.filter(a=>a.ok).length, pct = Math.round(good/n*100);
+  const avg = S.answers.reduce((s,a)=>s+a.time,0)/n;
+  $("#rpct").textContent = pct+"%";
+  $("#rcount").textContent = `${good} / ${n} bonnes réponses`;
+  requestAnimationFrame(()=> $("#rfg").style.strokeDashoffset = (540.4*(1-pct/100)).toFixed(1));
+  const name = S.name || "";
+  const [t,s] = pct===100 ? [`Sans faute${name?", "+name:""}`, "Votre OneNote est prêt pour le terrain. Badge Expert débloqué."]
+    : pct>=75 ? [`Très solide${name?", "+name:""}`, "Quelques réflexes à ancrer, à revoir ci-contre."]
+    : pct>=50 ? ["Bonne base", "Relancez « Revoir mes erreurs » pour consolider les points faibles."]
+    : ["On reprend ensemble", "Refaites les missions dans OneNote, puis relancez le quiz."];
+  $("#rtitle").textContent = t; $("#rsub").textContent = s;
+  $("#sScore").textContent = S.score; $("#sStreak").textContent = S.best; $("#sTime").textContent = avg.toFixed(1).replace(".",",")+" s";
+
+  $("#mrows").innerHTML = MISSIONS.map((m,mi)=>{
+    const rows = S.answers.filter(a=>QUESTIONS[a.qi].m===mi);
+    if(!rows.length) return "";
+    const g = rows.filter(a=>a.ok).length;
+    return `<div class="mrow" style="--c:${m.color}"><div class="nm"><i></i>${esc(m.title)}</div><div class="vl">${g}/${rows.length}</div><div class="tr"><div data-w="${g/rows.length*100}"></div></div></div>`;
+  }).join("");
+  requestAnimationFrame(()=> document.querySelectorAll(".mrow .tr div").forEach(d=> d.style.width=d.dataset.w+"%"));
+
+  const missed = S.answers.filter(a=>!a.ok);
+  $("#missed").innerHTML = missed.length ? missed.map(a=>{ const Q=QUESTIONS[a.qi];
+    return `<div class="miss glass"><div class="q">${esc(Q.q)}</div><div class="a">${esc(Q.o[0])}</div></div>`; }).join("")
+    : `<div class="allgood">Rien à retravailler. Toutes les missions sont acquises.</div>`;
+  $("#retryMissed").hidden = !missed.length;
+  S.missed = missed.map(a=>a.qi);
+
+  if(pct>=75 && !reduce){
+    const r = document.querySelector(".ring").getBoundingClientRect();
+    setTimeout(()=>burst(r.left+r.width/2, r.top+r.height/2, ["#E9D4A6","#C493EA","#7FDCC6","#ffffff"], 90), 600);
+  }
+  // historique local (cet appareil uniquement)
+  if(S.list.length===QUESTIONS.length){
+    const data = store.get(); data.history = [{ d:Date.now(), name, score:S.score, good, n }, ...(data.history||[])].slice(0,5); store.set(data);
+  }
+  renderPips();
+}
+
+function renderHistory(){
+  const h = (store.get().history)||[]; const box=$("#history");
+  if(!h.length){ box.hidden=true; return; }
+  box.hidden=false;
+  box.innerHTML = `Vos dernières parties sur cet appareil<ol>${h.map(x=>`<li>${new Date(x.d).toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"})} · ${esc(x.name||"—")} · ${x.good}/${x.n} · ${x.score} pts</li>`).join("")}</ol>`;
+}
+
+/* ================= événements ================= */
+const saved = store.get(); if(saved.name) $("#pname").value = saved.name;
+renderHistory();
+setMission(0);
+$("#pips").innerHTML = QUESTIONS.map(()=>'<div class="pip"></div>').join("");
+
+function launch(){
+  const field = $("#pname"), name = field.value.trim();
+  if(!name){
+    $("#hint").textContent = "Indiquez votre prénom pour lancer le quiz.";
+    const f = field.closest(".field"); f.classList.remove("err"); void f.offsetWidth; f.classList.add("err");
+    field.focus(); return;
+  }
+  $("#hint").textContent = "";
+  const d = store.get(); d.name = name; store.set(d);
+  start(QUESTIONS.map((_,i)=>i)); S.name = name;
+}
+$("#startBtn").addEventListener("click", launch);
+$("#pname").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); launch(); } });
+$("#replay").addEventListener("click", ()=>{ const n=S.name; start(QUESTIONS.map((_,i)=>i)); S.name=n; });
+$("#retryMissed").addEventListener("click", ()=>{ const n=S.name, m=S.missed; start(m); S.name=n; });
+$("#toHome").addEventListener("click", ()=>{ renderHistory(); setMission(0); $("#score").textContent="0"; $("#pips").innerHTML=QUESTIONS.map(()=>'<div class="pip"></div>').join(""); showView("home"); });
+
+addEventListener("keydown", e=>{
+  if($("#quiz").hidden || e.target.tagName==="INPUT") return;
+  const k = e.key.toUpperCase();
+  if(!locked){ const j = "1234".indexOf(k)>=0 ? "1234".indexOf(k) : "ABCD".indexOf(k); if(j>=0 && j<S.order.length){ e.preventDefault(); choose(j); } }
+  else if(e.key==="Enter" && $("#card").classList.contains("flipped") && document.activeElement?.id!=="nextBtn"){ e.preventDefault(); next(); }
+});
+</script>
+</html>
