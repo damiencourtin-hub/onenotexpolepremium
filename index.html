@@ -179,6 +179,20 @@ h1 em{font-style:italic;color:var(--orchid)}
 .gain small{display:block;font-size:11.5px;font-weight:600;color:var(--muted)}
 .goodans{border-radius:18px;padding:14px 16px;font-size:15px;line-height:1.45}
 .goodans .lbl{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mint);margin-bottom:4px}
+.onv{border-radius:16px;overflow:hidden;background:#FAFAFA;color:#1F1F1F;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:13px;box-shadow:0 14px 30px -14px rgba(0,0,0,.6);max-width:520px}
+.onv-h{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid #E6E6E6;font-weight:700;font-size:14px}
+.onv-h svg{flex:0 0 auto}
+.onv-h .cv{color:#777;font-weight:400}
+.onv-b{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.onv-s{border-right:1px solid #E6E6E6;padding:4px 0}
+.onv-s div,.onv-p div{padding:6px 12px;display:flex;align-items:center;gap:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.onv-s i{flex:0 0 auto;width:5px;height:17px;border-radius:2px 3px 3px 2px;background:var(--t)}
+.onv-s .sel,.onv-p .sel{background:#E3E3E3}
+.onv-p{padding:4px 6px}
+.onv-p .sel{outline:1.5px solid #7B3FBF;outline-offset:-1.5px}
+.onv-s .more{color:#888;padding-left:26px}
+@media (max-width:560px){.onv{font-size:12px}.onv-s div,.onv-p div{white-space:normal;padding:5px 9px;line-height:1.25}}
+.onv-cap{font-size:12px;color:var(--faint);margin-top:6px}
 .expl{color:var(--muted);font-size:15.5px;line-height:1.6;margin:0;max-width:62ch}
 .backfoot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
 .kbd{font-size:12px;color:var(--faint)}
@@ -258,11 +272,11 @@ h1 em{font-style:italic;color:var(--orchid)}
       <div>
         <div class="eyebrow">Quiz · Directeurs régionaux</div>
         <h1>Le quiz <em>OneNote</em></h1>
-        <p class="lede">Seize questions pour vérifier que votre bloc-notes perso et votre bloc-notes « Visites Magasin » sont prêts pour le terrain. Répondez vite : la rapidité et les séries rapportent des points.</p>
+        <p class="lede">Vingt et une questions pour vérifier que votre bloc-notes perso et votre bloc-notes « Visites Magasin » sont prêts pour le terrain. Répondez vite : la rapidité et les séries rapportent des points.</p>
         <div class="chips">
-          <span class="chip glass"><b>16</b> questions</span>
+          <span class="chip glass"><b>21</b> questions</span>
           <span class="chip glass"><b>5</b> missions</span>
-          <span class="chip glass">≈ <b>8</b> min</span>
+          <span class="chip glass">≈ <b>10</b> min</span>
           <span class="chip glass" id="modeChip">Sans réseau</span>
         </div>
         <div class="start" id="startForm">
@@ -377,18 +391,34 @@ const QUESTIONS = [
     o:["Avec le bouton « Dicter » de l'onglet Accueil","En collant un fichier audio dans la page","Avec Révision › Orthographe","C'est impossible dans OneNote"],
     e:"La dictée transcrit votre voix en texte, pratique juste après un échange en magasin. Elle a besoin d'une connexion pour fonctionner." },
 
-  { m:2, q:"Dans « Visites Magasin », quel onglet doit venir en premier ?",
-    o:["« Trame vierge », avec le modèle de compte rendu","« Magasins », classé par chiffre d'affaires","« Archives », pour les anciennes visites","Aucun : on crée les pages directement"],
-    e:"La trame reste toujours en tête de section : c'est le point de départ de chaque nouvelle page magasin." },
-  { m:2, q:"Quelle est la bonne méthode pour créer une nouvelle page magasin ?",
-    o:["Clic droit sur la trame › « Déplacer ou copier » vers « Magasins », puis renommer","Créer une page blanche et retaper la structure","Écrire directement dans la page « Trame vierge »","Coller une capture d'écran de la trame"],
-    e:"Copier la trame garantit la même structure d'un magasin à l'autre, en quelques secondes." },
-  { m:2, q:"Pourquoi ne jamais remplir directement la page « Trame vierge » ?",
+  { m:2, q:"Dans votre bloc-notes de visites, où se trouve le modèle de synthèse ?",
+    o:["Dans une section dédiée, « Synthèse de visite vierge », en haut de la liste","Dans chaque section magasin, en dernière page","Dans votre bloc-notes personnel","Nulle part : on retape la trame à chaque visite"],
+    e:"Le modèle a sa propre section, placée en haut juste après « Région globale ». Il est ainsi toujours au même endroit." },
+  { m:2, q:"Quelle est la bonne méthode pour démarrer la synthèse d'une nouvelle visite ?",
+    o:["Clic droit sur la page « Synthèse de visite à copier » › « Déplacer ou copier » vers la section du magasin, puis renommer","Créer une page blanche et retaper la structure","Écrire directement dans la page « Synthèse de visite à copier »","Coller une capture d'écran de la trame"],
+    e:"Copier le modèle garantit la même structure d'une visite et d'un magasin à l'autre, en quelques secondes." },
+  { m:2, q:"Pourquoi ne jamais remplir directement la page « Synthèse de visite à copier » ?",
     o:["Elle doit rester vide pour servir de modèle à chaque copie","Elle est en lecture seule","Elle s'efface à chaque synchronisation","Elle n'est pas visible sur mobile"],
-    e:"Une trame remplie, c'est un modèle perdu : la copie suivante embarquerait les notes d'un autre magasin." },
-  { m:2, q:"Comment organiser la section « Magasins » ?",
-    o:["Une page par magasin, nommée clairement","Une seule page pour tous les magasins","Un bloc-notes par magasin","Une section par visite"],
-    e:"Une page par magasin : l'historique d'un point de vente tient en un clic, et la recherche le retrouve par son nom." },
+    e:"Un modèle rempli, c'est un modèle perdu : la copie suivante embarquerait les notes d'un autre magasin." },
+  { m:2, q:"Comment organiser le bloc-notes des visites magasin ?",
+    o:["Une section par magasin, avec une page par visite","Une seule page pour tous les magasins","Un bloc-notes par magasin","Une section par visite"],
+    e:"Chaque magasin a sa section, avec la couleur de son enseigne. Chaque visite y ajoute une page « Synthèse de visite » : l'historique du magasin tient en un clic.",
+    v:"onenote" },
+  { m:2, q:"Dans l'en-tête de la « Synthèse de visite », que renseignez-vous ?",
+    o:["Magasin visité, date, contexte / interlocuteur et objectifs de visite","Le CA du jour et le nombre de vendeurs présents","Uniquement le nom du magasin","La liste des actions à mener"],
+    e:"L'en-tête pose le cadre avant tout constat : où, quand, avec qui et pourquoi vous venez." },
+  { m:2, q:"Où notez-vous le PAC et les KPI's du magasin ?",
+    o:["Dans « Point économique à date »","Dans « Gestion magasin »","Dans « Autres »","Dans « Message du RR »"],
+    e:"Le point économique ouvre la synthèse, juste avant le point qualitatif (CRM, services connectés, Wizville)." },
+  { m:2, q:"Comment sont construites les rubriques Animation commerciale, Environnement, Services connectés, Gestion magasin et Autres ?",
+    o:["En deux colonnes : Constat à gauche, Actions en face","En points forts et points faibles","Avec une note sur 10 par rubrique","En texte libre, sans structure"],
+    e:"Chaque constat appelle son action, sur la même ligne : rien ne reste sans suite." },
+  { m:2, q:"La vitrine ne respecte pas le plan merchandising. Dans quelle rubrique l'inscrivez-vous ?",
+    o:["Environnement (magasin et vitrines / marketing / merchandising)","Animation commerciale","Gestion magasin (organisation / flux / réserve / RH)","Services connectés / CRM / Wizville"],
+    e:"Vitrines, marketing et merchandising relèvent de l'Environnement. Le constat va à gauche, l'action corrective en face." },
+  { m:2, q:"Par quoi se termine chaque synthèse de visite ?",
+    o:["Le plan d'action / engagements, puis le message du RR","La signature du directeur de magasin","La note globale du magasin","La liste des photos prises pendant la visite"],
+    e:"Le plan d'action reprend les engagements pris pendant la visite. Le message du RR conclut la synthèse."},
 
   { m:3, q:"Comment faire de « Actions à suivre » une sous-page d'un magasin ?",
     o:["Clic droit sur la page › « Transformer en sous-page »","La glisser dans le volet des blocs-notes","Double-cliquer sur son titre","Insertion › Sous-page"],
@@ -623,6 +653,14 @@ function startTimer(){
   timerRaf = requestAnimationFrame(tick);
 }
 
+function onenoteVisual(){
+  const S = [["Région globale","#A21C9C"],["Synthèse de visite vierge","#3B8F3E",1],["SRZ XXXXX","#C81E7E"],["CRLL XXXXX","#1F4E8C"],["CRLL XXXXX","#1F4E8C"],["CRLL XXXXX","#1F4E8C"],["Morgan XXXXX","#D7312A"],["Morgan XXXXX","#D7312A"]];
+  return `<figure style="margin:0"><div class="onv" role="img" aria-label="Exemple d'organisation OneNote : une section par magasin, une page par visite">
+    <div class="onv-h"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="1" width="12" height="16" rx="2" fill="#7B3FBF"/><rect x="5" y="4" width="6" height="2" rx="1" fill="#fff"/><rect x="15" y="4" width="2" height="2" rx="1" fill="#7B3FBF"/><rect x="15" y="8" width="2" height="2" rx="1" fill="#7B3FBF"/><rect x="15" y="12" width="2" height="2" rx="1" fill="#7B3FBF"/></svg>Pôle Premium XXXXX <span class="cv">⌄</span></div>
+    <div class="onv-b"><div class="onv-s">${S.map(([n,c,sel])=>`<div class="${sel?"sel":""}" style="--t:${c}"><i></i>${n}</div>`).join("")}<div class="more">…</div></div>
+    <div class="onv-p"><div>Synthèse de visite</div><div class="sel">Synthèse de visite à copier</div></div></div>
+  </div><figcaption class="onv-cap">Sections à gauche (une par magasin), pages à droite (une par visite).</figcaption></figure>`;
+}
 function choose(j){
   if(locked) return; locked = true;
   cancelAnimationFrame(timerRaf);
@@ -660,6 +698,7 @@ function choose(j){
     </div>
     ${ok?"":`<div class="goodans glass"><div class="lbl">Bonne réponse</div>${esc(good)}</div>`}
     <p class="expl">${esc(Q.e)}</p>
+    ${Q.v==="onenote" ? onenoteVisual() : ""}
     <div class="backfoot"><span class="kbd">Entrée pour continuer</span>
       <button class="cta" type="button" id="nextBtn">${isLast?"Voir mon résultat":"Question suivante"}</button></div>`;
   $("#nextBtn").addEventListener("click", next);
