@@ -189,6 +189,37 @@ button{cursor:pointer}
 .ctaPod b{display:block;font-family:var(--display);font-style:italic;font-weight:500;font-size:24px;color:var(--champagne)}
 .ctaPod span{color:var(--muted);font-size:14px}
 @keyframes glowPod{50%{box-shadow:inset 0 1px 0 var(--glass-hi),0 0 40px -6px rgba(233,212,166,.55)}}
+/* fiche participant */
+.who .nm .open{all:unset;cursor:pointer;font-weight:650;border-bottom:1px dashed rgba(245,241,249,.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who .nm .open:hover,.who .nm .open:focus-visible{color:var(--champagne);border-bottom-color:var(--champagne)}
+.who .nm .open:focus-visible{outline:2px solid var(--champagne);outline-offset:3px;border-radius:4px}
+.dlg{position:fixed;inset:0;z-index:32;display:grid;place-items:center;background:rgba(8,5,12,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.dlgbox{width:min(980px,100%);max-height:100%;overflow:auto;border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:16px;animation:dlgIn .45s cubic-bezier(.2,.9,.2,1) both}
+@keyframes dlgIn{from{opacity:0;transform:translateY(18px) scale(.98)}}
+.dhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.dhead .av{width:52px;height:52px;border-radius:16px;font-size:18px}
+.dhead h2{margin:0;font-family:var(--display);font-weight:500;font-size:30px;line-height:1.1}
+.dhead .sub{color:var(--muted);font-size:13px}
+.dacts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.dkpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.dkpis div{border-radius:18px;padding:12px 14px}
+.dkpis b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.dkpis span{font-size:12px;color:var(--muted)}
+.dneeds{display:flex;flex-wrap:wrap;gap:6px}
+.dneeds span{border-radius:999px;padding:5px 11px;font-size:13px;background:rgba(233,212,166,.14);border:1px solid rgba(233,212,166,.35)}
+.dtable{overflow-x:auto}
+.dtable table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+.dtable th{text-align:left;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--champagne);padding:8px 10px;border-bottom:1px solid var(--glass-line)}
+.dtable td{padding:10px;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:top;line-height:1.4}
+.dtable td.tnum{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.dtable .qn{color:var(--faint);font-variant-numeric:tabular-nums;width:28px}
+.dtable .q{max-width:300px}
+.dtable .good{display:block;color:var(--mint);font-size:12.5px;margin-top:2px}
+.res{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:20px;padding:2px 8px;white-space:nowrap}
+.res.ok{background:rgba(127,220,198,.16);color:var(--mint)} .res.ko{background:rgba(255,143,128,.16);color:var(--coral)}
+.res.sv{background:rgba(233,212,166,.16);color:var(--champagne)} .res.na{background:rgba(255,255,255,.08);color:var(--faint)}
+.dmsg{font-size:12.5px;color:var(--mint);min-height:16px}
 /* ===== podium : esprit cérémonie, laque noire et liserés métal ===== */
 .pod{position:fixed;inset:0;z-index:35;overflow:hidden;display:flex;flex-direction:column;align-items:center;
   background:radial-gradient(70% 55% at 50% 38%,#24142F 0%,#0F0915 58%,#050307 100%);
@@ -364,7 +395,7 @@ button{cursor:pointer}
     <span class="tag">Admin</span>
     <div class="net" id="net"><i></i><span>Connexion…</span></div>
     <button class="btn gold" id="podBtn" type="button">Podium</button>
-    <button class="btn glass" id="exportBtn" type="button">Exporter CSV</button>
+    <button class="btn glass" id="exportBtn" type="button">Exporter toutes les réponses</button>
     <button class="btn glass danger" id="resetBtn" type="button">Nouvelle session</button>
   </header>
   <div class="alert glass" id="alert" role="alert" hidden></div>
@@ -413,6 +444,25 @@ button{cursor:pointer}
         <div class="qlist" id="qlist"></div>
       </div>
     </section>
+  </div>
+</div>
+
+<!-- fiche participant -->
+<div class="dlg" id="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="dName">
+  <div class="dlgbox glass">
+    <div class="dhead">
+      <div class="av" id="dAv"></div>
+      <div><h2 id="dName"></h2><div class="sub" id="dSub"></div></div>
+      <div class="dacts">
+        <button class="btn gold" id="dCsv" type="button">Télécharger ses réponses</button>
+        <button class="btn glass" id="dCopy" type="button">Copier le compte rendu</button>
+        <button class="btn glass" id="dClose" type="button">Fermer</button>
+      </div>
+    </div>
+    <div class="dmsg" id="dMsg" role="status"></div>
+    <div class="dkpis" id="dKpis"></div>
+    <div id="dNeeds"></div>
+    <div class="dtable"><table><thead><tr><th>#</th><th>Question</th><th>Réponse</th><th>Résultat</th><th style="text-align:right">Temps</th><th style="text-align:right">Points</th></tr></thead><tbody id="dRows"></tbody></table></div>
   </div>
 </div>
 
@@ -610,6 +660,7 @@ function render(){
   checkAllDone(list);
   renderQuestions(list);
   renderSurvey(list);
+  if(openId && !$("#dlg").hidden) renderDetail();
 }
 
 function renderBoard(list){
@@ -640,7 +691,7 @@ function renderBoard(list){
     const dots = Array.from({length:total},(_,k)=>{ const a=p.ans[k]; return `<i class="${a?(a.ok===true?"ok":a.ok===false?"ko":"sv"):""}"></i>`; }).join("");
     el.className = `row glass r${i+1}`;
     el.innerHTML = `<div class="rank">${i+1}</div><div class="av">${esc(initials(p.name))}</div>
-      <div class="who"><div class="nm">${esc(p.name)} <span class="st ${p.st.key}">${p.st.label}</span></div><div class="dots">${dots}</div></div>
+      <div class="who"><div class="nm"><button class="open" type="button" data-open="${esc(p.id)}" title="Voir ses réponses">${esc(p.name)}</button> <span class="st ${p.st.key}">${p.st.label}</span></div><div class="dots">${dots}</div></div>
       <div class="tm ${p.status==="done"&&durOf(p,now)===fastest?"fast":""}"><b class="${p.status==="done"?"":"run"}" ${p.status!=="done"&&p.startedAt?`data-start="${p.startedAt}"`:""}>${fmtDur(durOf(p,now))}</b><span>${avgAns(p)!=null?`${avgAns(p).toFixed(1).replace(".",",")} s / réponse`:"pas encore de réponse"}</span></div>
       <div class="pts"><b>${p.score||0}</b><span>${p.good||0}/${p.gt||4} justes · ${p.answered||0}/${total}</span></div>`;
     board.appendChild(el);
@@ -747,6 +798,77 @@ $("#exportBtn").addEventListener("click", ()=>{
   a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
   a.download = `Quiz_OneNote_resultats_${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
+});
+
+
+/* ================= fiche participant ================= */
+let openId = null;
+function detailData(){
+  const p = players[openId]; if(!p) return null;
+  const now = Date.now() + offset;
+  const qs = meta?.questions ? asArray(meta.questions) : [];
+  const ans = asArray(p.answers);
+  const rows = qs.map((q,i)=>{
+    const a = ans.find(x=>x && x.qi===i);
+    let res, cls, rep;
+    if(!a){ res="Pas encore"; cls="na"; rep="—"; }
+    else if(typeof a.ok==="boolean"){ res = a.ok?"Juste":"Faux"; cls = a.ok?"ok":"ko"; rep = a.v || "Pas de réponse (temps écoulé)"; }
+    else if(a.v==null){ res="Sans réponse"; cls="na"; rep="Temps écoulé"; }
+    else { res="Sondage"; cls="sv"; rep = csvVal(q,a.v); }
+    return { n:i+1, q:q.q, rep, res, cls, good: (q.a && a && a.ok===false) ? q.a : null, t: a ? a.t : null, pts: a ? (a.pts||0) : null };
+  });
+  const need = qs.findIndex(q=>q.type==="multi");
+  const na = need>=0 ? ans.find(x=>x && x.qi===need) : null;
+  return { p, rows, needs: na && Array.isArray(na.v) ? na.v : [], dur: durOf(p,now), st: statusOf(p,now), avg: avgAns(p),
+    total: ans.filter(Boolean).reduce((s,a)=>s+(a.t||0),0) };
+}
+function renderDetail(){
+  const d = detailData(); if(!d){ closeDetail(); return; }
+  const { p } = d;
+  $("#dAv").textContent = initials(p.name);
+  $("#dName").textContent = p.name;
+  $("#dSub").textContent = `${d.st.label} · commencé ${p.startedAt ? new Date(p.startedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) : "—"}${p.status==="done"&&p.finishedAt?` · terminé ${new Date(p.finishedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}`:""}`;
+  $("#dKpis").innerHTML = [
+    [`${p.score||0}`, "points"], [`${p.good||0} / ${p.gt||4}`, "bonnes réponses sur les bases"],
+    [`${p.answered||0} / ${p.total||d.rows.length}`, "questions répondues"],
+    [fmtDur(d.dur), p.status==="done" ? "durée du quiz" : "en cours depuis"],
+    [d.avg!=null ? d.avg.toFixed(1).replace(".",",")+" s" : "—", "temps moyen par réponse"]
+  ].map(([b,l])=>`<div class="glass"><b>${esc(b)}</b><span>${esc(l)}</span></div>`).join("");
+  $("#dNeeds").innerHTML = d.needs.length ? `<h3 class="h2" style="margin-bottom:8px">Ses attentes</h3><div class="dneeds">${d.needs.map(x=>`<span>${esc(x)}</span>`).join("")}</div>` : "";
+  $("#dRows").innerHTML = d.rows.map(r=>`<tr><td class="qn">${r.n}</td><td class="q">${esc(r.q)}</td>
+    <td>${esc(r.rep)}${r.good?`<span class="good">Bonne réponse : ${esc(r.good)}</span>`:""}</td>
+    <td><span class="res ${r.cls}">${r.res}</span></td>
+    <td class="tnum">${r.t!=null ? String(r.t).replace(".",",")+" s" : "—"}</td><td class="tnum">${r.pts!=null ? r.pts : "—"}</td></tr>`).join("");
+}
+function openDetail(id){ openId = id; $("#dMsg").textContent = ""; $("#dlg").hidden = false; renderDetail(); $("#dClose").focus(); }
+function closeDetail(){ $("#dlg").hidden = true; const b = openId && document.querySelector(`[data-open="${CSS.escape(openId)}"]`); openId = null; b?.focus(); }
+function downloadCSV(filename, rows){
+  const csv = "﻿" + rows.map(r=>r.map(v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`).join(";")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+}
+const slug = s => String(s||"participant").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w]+/g,"_").replace(/^_|_$/g,"");
+$("#board").addEventListener("click", e=>{ const b = e.target.closest("[data-open]"); if(b) openDetail(b.dataset.open); });
+$("#dClose").addEventListener("click", closeDetail);
+$("#dlg").addEventListener("click", e=>{ if(e.target.id==="dlg") closeDetail(); });
+addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#dlg").hidden) closeDetail(); });
+$("#dCsv").addEventListener("click", ()=>{
+  const d = detailData(); if(!d) return;
+  const head = [["Participant", d.p.name],["Points", d.p.score||0],["Bonnes réponses (bases)", `${d.p.good||0}/${d.p.gt||4}`],["Durée du quiz", fmtDur(d.dur)],["Attentes", d.needs.join(" | ")],[]];
+  downloadCSV(`Quiz_OneNote_${slug(d.p.name)}_${new Date().toISOString().slice(0,10)}.csv`,
+    [...head, ["N°","Question","Réponse","Résultat","Bonne réponse","Temps (s)","Points"],
+     ...d.rows.map(r=>[r.n, r.q, r.rep, r.res, r.good||"", r.t!=null?String(r.t).replace(".",","):"", r.pts!=null?r.pts:""])]);
+  $("#dMsg").textContent = "Fichier téléchargé.";
+});
+$("#dCopy").addEventListener("click", ()=>{
+  const d = detailData(); if(!d) return;
+  const txt = [`Compte rendu · ${d.p.name}`, `Points : ${d.p.score||0} · Bonnes réponses sur les bases : ${d.p.good||0}/${d.p.gt||4} · Durée : ${fmtDur(d.dur)}`,
+    d.needs.length ? `Attentes : ${d.needs.join(", ")}` : "Attentes : aucune cochée", "",
+    ...d.rows.map(r=>`${r.n}. ${r.q}\n   ${r.rep} [${r.res}]${r.good?` · bonne réponse : ${r.good}`:""}${r.t!=null?` · ${String(r.t).replace(".",",")} s`:""}`)].join("\n");
+  const ok = ()=> $("#dMsg").textContent = "Compte rendu copié.";
+  const fail = ()=> $("#dMsg").textContent = "Copie impossible ici : utilisez « Télécharger ses réponses ».";
+  try{ navigator.clipboard ? navigator.clipboard.writeText(txt).then(ok, fail) : fail(); }catch(e){ fail(); }
 });
 
 /* ================= podium ================= */
