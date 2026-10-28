@@ -319,74 +319,73 @@ h1 em{font-style:italic;color:var(--orchid)}
 .cra{font-size:13.5px;line-height:1.4}.cra.ko{color:var(--coral)}.cra.ok{color:var(--mint)}.cra.mute{color:var(--muted)}
 .crkv{display:grid;grid-template-columns:1fr auto;gap:6px 14px;font-size:14px;font-variant-numeric:tabular-nums}
 .crkv span{color:var(--muted)}.crkv b{text-align:right}
-/* ===== accueil : bloc-notes OneNote animé ===== */
+/* ===== accueil : OneNote sur un PC portable, animé ===== */
 .nbwrap{position:relative;width:100%;min-width:0;height:440px}
-.nbscene{position:absolute;left:50%;top:0;margin-left:-310px;width:620px;height:440px;perspective:1600px;transform:scale(var(--s,1));transform-origin:50% 0}
-.book{position:absolute;left:310px;top:40px;width:280px;height:360px;transform-style:preserve-3d;
-  transform:translateX(-140px) rotateX(14deg) rotateY(-18deg) rotateZ(2deg);transition:transform 1.4s cubic-bezier(.65,0,.25,1)}
-.nbscene.open .book{transform:translateX(0) rotateX(12deg) rotateY(-4deg) rotateZ(0)}
-.nbscene:not(.reduce) .book{animation:bob 7s ease-in-out infinite}
-@keyframes bob{50%{translate:0 -8px}}
-/* page de droite */
-.pgR{position:absolute;inset:0;border-radius:4px 12px 12px 4px;background:linear-gradient(90deg,#E8E2F0 0,#FBF9FE 14px,#FFFFFF 60%);
-  box-shadow:inset 1px 0 0 rgba(0,0,0,.06),2px 2px 0 #EEE9F5,4px 4px 0 #E4DDEE,6px 6px 0 #DAD2E6,0 30px 50px -20px rgba(0,0,0,.6);
-  padding:16px 18px 16px 22px;color:#25182F;font-family:var(--body);overflow:hidden}
-.pgtabs{display:flex;gap:6px;margin-bottom:12px}
-.pgtabs span{font-size:9px;font-weight:700;padding:3px 7px;border-radius:5px;background:#F1ECF7;color:#7A6B88}
-.pgtabs .on{background:#EDE2FA;color:#6B22B0;box-shadow:inset 0 0 0 1px #B78BE3}
-.pgtitle{font-family:var(--display);font-size:21px;line-height:1.1;color:#1E1430}
-.pgdate{font-size:9px;color:#9A8FA6;margin:3px 0 10px;padding-bottom:7px;border-bottom:1px solid #EEE8F4}
-.pgfield{font-size:10.5px;color:#2A2140;margin-bottom:3px;white-space:nowrap}
+.nbscene{position:absolute;left:50%;top:0;margin-left:-310px;width:620px;height:440px;perspective:1700px;transform:scale(var(--s,1));transform-origin:50% 0}
+.laptop{position:absolute;left:40px;top:14px;width:540px;transform-style:preserve-3d;transform:rotateX(8deg) rotateY(-14deg);animation:bob 8s ease-in-out infinite}
+@keyframes bob{50%{translate:0 -7px}}
+.lid{position:relative;width:540px;height:340px;border-radius:18px 18px 8px 8px;padding:12px 12px 16px;
+  background:linear-gradient(160deg,#3A3442,#1A1620 60%,#100D14);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 0 0 1px rgba(255,255,255,.06),0 40px 70px -30px rgba(0,0,0,.8)}
+.lid::before{content:"";position:absolute;top:5px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#2C2833;box-shadow:inset 0 0 1px rgba(255,255,255,.4)}
+.screen{position:relative;height:100%;border-radius:6px;overflow:hidden;background:#000}
+.glare{position:absolute;inset:0;pointer-events:none;background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 30%,transparent 42%)}
+.base{position:relative;width:620px;height:22px;margin-left:-40px;border-radius:2px 2px 14px 14px;
+  background:linear-gradient(180deg,#5A5462 0%,#2E2934 40%,#1B1720 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 18px 30px -12px rgba(0,0,0,.7)}
+.base::before{content:"";position:absolute;left:50%;top:0;width:110px;height:7px;margin-left:-55px;border-radius:0 0 8px 8px;background:#1A1620;box-shadow:inset 0 -1px 0 rgba(255,255,255,.1)}
+.shadow{position:absolute;left:50%;top:392px;width:560px;height:34px;transform:translateX(-50%);background:radial-gradient(50% 50% at 50% 50%,rgba(0,0,0,.6),transparent 70%);filter:blur(6px)}
+/* l'application */
+.onapp{position:absolute;inset:0;background:#F7F5FA;color:#25182F;font-family:var(--body);display:flex;flex-direction:column;opacity:0;transition:opacity .8s}
+.nbscene.on .onapp{opacity:1}
+.tbar{height:26px;flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:0 8px;background:#6E2BB0;color:#fff;font-size:9.5px;font-weight:650}
+.tlogo{width:13px;height:13px;border-radius:3px;background:#fff;box-shadow:inset 0 0 0 3px #6E2BB0,inset 0 0 0 5px #fff}
+.tsearch{margin-left:auto;margin-right:auto;background:rgba(255,255,255,.18);border-radius:4px;padding:3px 12px;font-weight:500;opacity:.9}
+.twin{display:flex;gap:9px}.twin i{width:7px;height:1.5px;background:#fff;opacity:.8}
+.panes{flex:1;display:grid;grid-template-columns:128px 112px 1fr;min-height:0}
+.pnb{background:#ECE8F1;padding:9px 6px;border-right:1px solid #DED7E7}
+.phd{font-size:8.5px;font-weight:800;letter-spacing:.06em;color:#7A6B88;margin:0 0 6px 4px}
+.nbrow{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:5px 4px;border-radius:4px}
+.chev{display:inline-block;width:8px;color:#7A6B88;transition:transform .4s}
+.nbic{width:10px;height:12px;border-radius:2px;background:#3B8F3E;box-shadow:inset -2px 0 0 #2D6F30}
+.secs{margin-left:10px}
+.sec{position:relative;font-size:9.5px;padding:4.5px 5px 4.5px 12px;border-radius:4px;color:#3A2E48;opacity:0;transform:translateX(-10px);
+  transition:opacity .35s,transform .45s cubic-bezier(.3,1.4,.5,1),background .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec::before{content:"";position:absolute;left:3px;top:4px;bottom:4px;width:3.5px;border-radius:2px;background:var(--c)}
+.sec.add{color:#8B2FC9;font-weight:600;padding-left:4px}.sec.add::before{display:none}
+.ppg{background:#F3F0F7;padding:9px 6px;border-right:1px solid #E4DEEC}
+.addpg{font-size:9px;color:#6E2BB0;font-weight:600;border:1px solid #D8CCE8;border-radius:4px;padding:4px 6px;margin-bottom:6px;background:#fff;opacity:0;transition:opacity .4s}
+.pgi{font-size:9.5px;padding:5px 6px;border-radius:4px;color:#4A3E58;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transform:translateY(6px);transition:opacity .35s,transform .4s,background .3s}
+.pgR{position:relative;background:#fff;padding:12px 16px;overflow:hidden;opacity:0;transition:opacity .5s}
+.pgtitle{font-family:var(--display);font-size:19px;line-height:1.1;color:#1E1430}
+.pgdate{font-size:8.5px;color:#9A8FA6;margin:3px 0 9px;padding-bottom:6px;border-bottom:1px solid #EEE8F4}
+.pgfield{font-size:10px;color:#2A2140;margin-bottom:3px;white-space:nowrap}
 .pgfield b{color:#2B2A6E}
 .type{display:inline-block;overflow:hidden;vertical-align:bottom;white-space:nowrap;width:0;color:#6B22B0;font-weight:600;border-right:1.5px solid transparent}
-.pgbar{margin-top:9px;font-size:9.5px;font-weight:700;color:#2B2A6E;background:#E3D8F1;padding:3px 6px;border-radius:3px}
-.ln{display:block;height:5px;border-radius:3px;background:#D9CFE6;margin-top:6px;width:0;transition:width .7s cubic-bezier(.3,.9,.3,1)}
-.cagrid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;margin-top:5px;font-size:8.5px;font-weight:700;color:#7A6B88}
-.cagrid .ln{margin-top:5px}
-.todo{display:flex;align-items:center;gap:7px;margin-top:10px}
-.cb{width:13px;height:13px;border-radius:3px;border:1.5px solid #B9A9CC;display:grid;place-items:center;flex:0 0 auto;transition:background .3s,border-color .3s}
-.cb svg{width:10px;height:10px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:14;stroke-dashoffset:14;transition:stroke-dashoffset .4s .15s}
+.pgbar{margin-top:8px;font-size:9px;font-weight:700;color:#2B2A6E;background:#E3D8F1;padding:3px 6px;border-radius:3px}
+.ln{display:block;height:4.5px;border-radius:3px;background:#D9CFE6;margin-top:5px;width:0;transition:width .7s cubic-bezier(.3,.9,.3,1)}
+.cagrid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;margin-top:4px;font-size:8px;font-weight:700;color:#7A6B88}
+.todo{display:flex;align-items:center;gap:7px;margin-top:9px}
+.cb{width:12px;height:12px;border-radius:3px;border:1.5px solid #B9A9CC;display:grid;place-items:center;flex:0 0 auto;transition:background .3s,border-color .3s}
+.cb svg{width:9px;height:9px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:14;stroke-dashoffset:14;transition:stroke-dashoffset .4s .15s}
 .todo .ln{margin:0;flex:1}
-.photo{position:absolute;right:16px;bottom:16px;width:88px;padding:4px 4px 6px;background:#fff;border-radius:6px;box-shadow:0 10px 22px -8px rgba(40,20,60,.45);
-  transform:rotate(6deg) scale(.3);opacity:0;transition:transform .7s cubic-bezier(.3,1.6,.5,1),opacity .3s;text-align:center}
+.photo{position:absolute;right:14px;bottom:12px;width:80px;padding:4px 4px 5px;background:#fff;border-radius:6px;box-shadow:0 10px 22px -8px rgba(40,20,60,.45);
+  transform:rotate(5deg) scale(.3);opacity:0;transition:transform .7s cubic-bezier(.3,1.6,.5,1),opacity .3s;text-align:center}
 .photo svg{display:block;width:100%;height:auto;border-radius:3px}
-.photo span{font-size:8px;color:#7A6B88;font-weight:600}
-/* couverture */
-.cover{position:absolute;inset:0;transform-style:preserve-3d;transform-origin:0 50%;transition:transform 1.6s cubic-bezier(.65,0,.25,1)}
-.nbscene.open .cover{transform:rotateY(-172deg)}
-.cvF,.cvB{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:4px 14px 14px 4px}
-.cvF{background:
-    radial-gradient(120% 70% at 85% 0%,rgba(255,255,255,.28),transparent 55%),
-    linear-gradient(160deg,#9B44D8 0%,#7426B5 45%,#4E1585 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 18px 0 22px -14px rgba(0,0,0,.45),inset -2px 0 0 rgba(255,255,255,.15);
-  padding:34px 28px 28px 40px;color:#fff;overflow:hidden}
-.cvF::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.22) 45%,transparent 58%);background-size:260% 100%;animation:sheen2 6s ease-in-out infinite}
-@keyframes sheen2{0%,100%{background-position:110% 0}50%{background-position:-10% 0}}
-.cvlabel{font-size:10px;font-weight:800;letter-spacing:.24em;text-transform:uppercase;opacity:.75}
-.cvname{font-family:var(--display);font-size:48px;line-height:1;margin-top:8px;text-shadow:0 2px 12px rgba(0,0,0,.25)}
-.cvline{width:44px;height:2px;background:var(--champagne);margin:16px 0 12px;border-radius:2px}
-.cvsub{font-size:11.5px;opacity:.8;line-height:1.4}
-.cvmark{position:absolute;right:22px;bottom:22px;width:54px;height:54px}
-.cvB{transform:rotateY(180deg);background:linear-gradient(270deg,#E8E2F0 0,#F7F4FB 14px,#FBF9FE 70%);
-  box-shadow:inset -1px 0 0 rgba(0,0,0,.06);padding:18px 18px 18px 20px;color:#25182F}
-.secttl{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#9A8FA6;margin-bottom:8px}
-.sec{position:relative;font-size:11.5px;padding:7px 8px 7px 16px;border-radius:6px;margin-bottom:2px;color:#3A2E48;opacity:0;transform:translateX(-12px);
-  transition:opacity .4s,transform .5s cubic-bezier(.3,1.4,.5,1),background .3s}
-.sec::before{content:"";position:absolute;left:5px;top:7px;bottom:7px;width:4px;border-radius:2px;background:var(--c)}
-.sec.add{color:#8B2FC9;font-weight:600;padding-left:8px}.sec.add::before{display:none}
-.rings{position:absolute;left:-7px;top:22px;bottom:22px;display:flex;flex-direction:column;justify-content:space-between;transform:translateZ(2px);pointer-events:none}
-.rings i{width:16px;height:9px;border-radius:5px;background:linear-gradient(180deg,#F4F1F8,#A79DB3);box-shadow:0 2px 3px rgba(0,0,0,.35)}
-.shadow{position:absolute;left:50%;bottom:16px;width:420px;height:40px;transform:translateX(-50%);background:radial-gradient(50% 50% at 50% 50%,rgba(0,0,0,.55),transparent 70%);filter:blur(6px)}
-.sync{position:absolute;right:18px;top:22px;display:flex;align-items:center;gap:8px;padding:8px 13px;border-radius:999px;font-size:12.5px;font-weight:650;color:var(--mint);
-  background:rgba(14,10,20,.55);border:1px solid rgba(127,220,198,.45);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  opacity:0;transform:translateY(-8px) scale(.9);transition:opacity .5s,transform .6s cubic-bezier(.3,1.5,.5,1)}
-.sync svg{width:20px;height:20px}
-.cap{position:absolute;left:50%;bottom:0;transform:translateX(-50%);font-size:11.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--champagne);white-space:nowrap;transition:opacity .4s}
+.photo span{font-size:7.5px;color:#7A6B88;font-weight:600}
+.sync{position:absolute;right:10px;bottom:10px;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:9.5px;font-weight:650;color:#fff;
+  background:#2E7D5B;box-shadow:0 10px 24px -8px rgba(0,0,0,.4);opacity:0;transform:translateY(10px);transition:opacity .5s,transform .6s cubic-bezier(.3,1.5,.5,1)}
+.sync svg{width:15px;height:15px}
+.cap{position:absolute;left:50%;top:418px;transform:translateX(-50%);font-size:11.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--champagne);white-space:nowrap;transition:opacity .4s}
 /* étapes */
-.nbscene.tabs .sec{opacity:1;transform:none}
-.nbscene.tabs .sec:nth-child(3){transition-delay:.08s}.nbscene.tabs .sec:nth-child(4){transition-delay:.16s}.nbscene.tabs .sec:nth-child(5){transition-delay:.24s}
-.nbscene.tabs .sec:nth-child(6){transition-delay:.32s}.nbscene.tabs .sec:nth-child(7){transition-delay:.4s}.nbscene.tabs .sec:nth-child(8){transition-delay:.48s}
-.nbscene.tabs .sec.on{background:#EDE2FA;font-weight:700;color:#4E1585}
+.nbscene.open .chev{transform:rotate(90deg)}
+.nbscene.open .sec{opacity:1;transform:none}
+.nbscene.open .sec:nth-child(2){transition-delay:.08s}.nbscene.open .sec:nth-child(3){transition-delay:.16s}.nbscene.open .sec:nth-child(4){transition-delay:.24s}
+.nbscene.open .sec:nth-child(5){transition-delay:.32s}.nbscene.open .sec:nth-child(6){transition-delay:.4s}.nbscene.open .sec:nth-child(7){transition-delay:.48s}
+.nbscene.open .sec.on{background:#fff;font-weight:700;color:#4E1585;box-shadow:0 1px 2px rgba(60,30,90,.12)}
+.nbscene.page .addpg{opacity:1}
+.nbscene.page .pgi{opacity:1;transform:none}
+.nbscene.page .pgi:nth-child(3){transition-delay:.1s}.nbscene.page .pgi:nth-child(4){transition-delay:.2s}
+.nbscene.page .pgi.on{background:#E7DDF4;font-weight:700;color:#4E1585}
+.nbscene.page .pgR{opacity:1;transition-delay:.3s}
 .nbscene.write .t1{animation:type1 .9s steps(9) forwards,caret .5s step-end 3}
 .nbscene.write .t2{animation:type2 .9s steps(12) .9s forwards}
 @keyframes type1{to{width:9ch}} @keyframes type2{to{width:12ch}}
@@ -394,10 +393,10 @@ h1 em{font-style:italic;color:var(--orchid)}
 .nbscene.write .l1{width:92%;transition-delay:1.7s}.nbscene.write .l2{width:64%;transition-delay:2s}
 .nbscene.write .l3{width:88%;transition-delay:2.3s}.nbscene.write .l4{width:70%;transition-delay:2.5s}
 .nbscene.check .cb{background:#3B8F3E;border-color:#3B8F3E}.nbscene.check .cb svg{stroke-dashoffset:0}
-.nbscene.check .l5{width:78%}
-.nbscene.snap .photo{opacity:1;transform:rotate(6deg) scale(1)}
+.nbscene.check .l5{width:70%}
+.nbscene.snap .photo{opacity:1;transform:rotate(5deg) scale(1)}
 .nbscene.synced .sync{opacity:1;transform:none}
-.nbscene.reduce .book,.nbscene.reduce .cover,.nbscene.reduce *{transition:none!important;animation:none!important}
+.nbscene.reduce *{transition:none!important;animation:none!important}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
@@ -445,46 +444,53 @@ h1 em{font-style:italic;color:var(--orchid)}
       </div>
             <div class="nbwrap" id="nbwrap" aria-hidden="true">
         <div class="nbscene" id="nbscene">
-          <div class="book" id="book">
-            <!-- page de droite : la synthèse en cours -->
-            <div class="pgR">
-              <div class="pgtabs"><span class="on">Synthèse de visite</span><span>Checklist visite</span></div>
-              <div class="pgtitle">Synthèse de visite</div>
-              <div class="pgdate">mercredi 28 octobre · 10:30</div>
-              <div class="pgfield"><b>Magasin visité :</b> <span class="type t1">Magasin 1</span></div>
-              <div class="pgfield"><b>Objectifs :</b> <span class="type t2">vitrine + PAC</span></div>
-              <div class="pgbar">Point économique à date</div>
-              <div class="ln l1"></div><div class="ln l2"></div>
-              <div class="pgbar">Animation commerciale</div>
-              <div class="cagrid"><span>Constat</span><span>Actions</span><i class="ln l3"></i><i class="ln l4"></i></div>
-              <div class="todo"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.4L10 3.2"/></svg></span><span class="ln l5"></span></div>
-              <div class="photo"><svg viewBox="0 0 80 52"><rect width="80" height="52" rx="4" fill="#E9E3F3"/><rect x="8" y="14" width="64" height="34" rx="2" fill="#C9B6E6"/><rect x="14" y="20" width="22" height="28" fill="#F6F1FB"/><rect x="42" y="20" width="24" height="16" fill="#F6F1FB"/><path d="M4 14h72l-6-8H10z" fill="#8B2FC9"/></svg><span>Vitrine</span></div>
-            </div>
-            <!-- couverture : recto = bloc-notes fermé, verso = sections -->
-            <div class="cover">
-              <div class="cvF">
-                <div class="cvlabel">Bloc-notes</div>
-                <div class="cvname">Centre</div>
-                <div class="cvline"></div>
-                <div class="cvsub">Visites magasin · Pôle Premium</div>
-                <div class="cvmark"><svg viewBox="0 0 40 40"><rect x="6" y="4" width="24" height="32" rx="4" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/><path d="M12 13h12M12 19h12M12 25h8" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round"/><rect x="31" y="8" width="4" height="6" rx="1.5" fill="#F29A5C"/><rect x="31" y="16" width="4" height="6" rx="1.5" fill="#3CC4BC"/><rect x="31" y="24" width="4" height="6" rx="1.5" fill="#E9D4A6"/></svg></div>
+          <div class="laptop">
+            <div class="lid">
+              <div class="screen">
+                <div class="onapp">
+                  <div class="tbar"><span class="tlogo"></span><span class="tname">OneNote</span><span class="tsearch">Rechercher dans les blocs-notes</span><span class="twin"><i></i><i></i><i></i></span></div>
+                  <div class="panes">
+                    <div class="pnb">
+                      <div class="phd">Blocs-notes</div>
+                      <div class="nbrow"><span class="chev">›</span><span class="nbic"></span>Centre</div>
+                      <div class="secs">
+                        <div class="sec" style="--c:#A21C9C">Région globale</div>
+                        <div class="sec" style="--c:#3B8F3E">Synthèse de visite</div>
+                        <div class="sec on" style="--c:#C81E7E">Magasin 1</div>
+                        <div class="sec" style="--c:#1F6FC9">Magasin 2</div>
+                        <div class="sec" style="--c:#1F6FC9">Magasin 3</div>
+                        <div class="sec" style="--c:#D7312A">Magasin 4</div>
+                        <div class="sec add">+ Nouvelle section</div>
+                      </div>
+                    </div>
+                    <div class="ppg">
+                      <div class="addpg">+ Ajouter une page</div>
+                      <div class="pgi">Synthèse de visite à copier</div>
+                      <div class="pgi on">Synthèse de visite</div>
+                      <div class="pgi">Checklist visite</div>
+                    </div>
+                    <div class="pgR">
+                      <div class="pgtitle">Synthèse de visite</div>
+                      <div class="pgdate">mercredi 28 octobre · 10:30</div>
+                      <div class="pgfield"><b>Magasin visité :</b> <span class="type t1">Magasin 1</span></div>
+                      <div class="pgfield"><b>Objectifs :</b> <span class="type t2">vitrine + PAC</span></div>
+                      <div class="pgbar">Point économique à date</div>
+                      <div class="ln l1"></div><div class="ln l2"></div>
+                      <div class="pgbar">Animation commerciale</div>
+                      <div class="cagrid"><span>Constat</span><span>Actions</span><i class="ln l3"></i><i class="ln l4"></i></div>
+                      <div class="todo"><span class="cb"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.4L10 3.2"/></svg></span><span class="ln l5"></span></div>
+                      <div class="photo"><svg viewBox="0 0 80 52"><rect width="80" height="52" rx="4" fill="#E9E3F3"/><rect x="8" y="14" width="64" height="34" rx="2" fill="#C9B6E6"/><rect x="14" y="20" width="22" height="28" fill="#F6F1FB"/><rect x="42" y="20" width="24" height="16" fill="#F6F1FB"/><path d="M4 14h72l-6-8H10z" fill="#8B2FC9"/></svg><span>Vitrine</span></div>
+                    </div>
+                  </div>
+                  <div class="sync"><svg viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9H7z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 13.5l2 2 3.5-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Synchronisé sur ton téléphone</span></div>
+                </div>
+                <div class="glare"></div>
               </div>
-              <div class="cvB">
-                <div class="secttl">Sections</div>
-                <div class="sec" style="--c:#A21C9C">Région globale</div>
-                <div class="sec" style="--c:#3B8F3E">Synthèse de visite</div>
-                <div class="sec on" style="--c:#C81E7E">Magasin 1</div>
-                <div class="sec" style="--c:#1F6FC9">Magasin 2</div>
-                <div class="sec" style="--c:#1F6FC9">Magasin 3</div>
-                <div class="sec" style="--c:#D7312A">Magasin 4</div>
-                <div class="sec add">+ Nouvelle section</div>
-              </div>
             </div>
-            <div class="rings"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="base"></div>
           </div>
           <div class="shadow"></div>
-          <div class="sync"><svg viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9H7z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 13.5l2 2 3.5-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Synchronisé sur ton téléphone</span></div>
-          <div class="cap" id="nbcap">Le bloc-notes</div>
+          <div class="cap" id="nbcap">Ton PC</div>
         </div>
       </div>
     </section>
@@ -1099,37 +1105,35 @@ addEventListener("keydown", e=>{
   }
   else if(e.key==="Enter" && $("#card").classList.contains("flipped") && document.activeElement?.id!=="nextBtn"){ e.preventDefault(); next(); }
 });
-/* ================= accueil : bloc-notes animé ================= */
+/* ================= accueil : OneNote animé sur PC ================= */
 (function(){
   const sc = document.getElementById("nbscene"), wrap = document.getElementById("nbwrap");
   if(!sc) return;
-  const fit = ()=>{ const w = wrap.clientWidth; const s = Math.min(1, w/620); sc.style.setProperty("--s", s.toFixed(3)); wrap.style.height = (440*s)+"px"; };
+  const fit = ()=>{ const s = Math.min(1, wrap.clientWidth/620); sc.style.setProperty("--s", s.toFixed(3)); wrap.style.height = (440*s)+"px"; };
   fit(); addEventListener("resize", fit);
   const cap = document.getElementById("nbcap");
-  const ALL = ["open","tabs","write","check","snap","synced"];
+  const ALL = ["on","open","page","write","check","snap","synced"];
   if(reduce){ sc.classList.add("reduce", ...ALL); cap.textContent = "Une section par magasin, une page par visite"; return; }
   const steps = [
-    [0,    [],                       "Le bloc-notes"],
-    [1600, ["open"],                 "Il s'ouvre"],
-    [3000, ["open","tabs"],          "Une section par magasin"],
-    [4600, ["open","tabs","write"],  "Une page par visite"],
-    [8000, ["open","tabs","write","check"], "Les actions à suivre"],
-    [9000, ["open","tabs","write","check","snap"], "Les photos du magasin"],
-    [10200,["open","tabs","write","check","snap","synced"], "Retrouvé sur ton téléphone"],
-    [13600,[],                       "Le bloc-notes"],
+    [0,     ["on"],                                              "OneNote sur ton PC"],
+    [1300,  ["on","open"],                                       "Ton bloc-notes, une section par magasin"],
+    [3200,  ["on","open","page"],                                "Une page par visite"],
+    [4400,  ["on","open","page","write"],                        "Tu remplis la synthèse"],
+    [8000,  ["on","open","page","write","check"],                "Les actions à suivre"],
+    [9000,  ["on","open","page","write","check","snap"],         "Les photos du magasin"],
+    [10200, ["on","open","page","write","check","snap","synced"],"Retrouvé sur ton téléphone"],
+    [13800, [],                                                  "OneNote sur ton PC"],
   ];
   let timers = [];
   const run = ()=>{
     timers.forEach(clearTimeout); timers = [];
     steps.forEach(([t, cls, label])=> timers.push(setTimeout(()=>{
-      if($("#home").hidden) return;
       ALL.forEach(c=> sc.classList.toggle(c, cls.includes(c)));
       cap.style.opacity = 0; setTimeout(()=>{ cap.textContent = label; cap.style.opacity = 1; }, 250);
     }, t)));
-    timers.push(setTimeout(run, 15600));
+    timers.push(setTimeout(run, 15000));
   };
   run();
-  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) run(); });
 })();
 </script>
 
