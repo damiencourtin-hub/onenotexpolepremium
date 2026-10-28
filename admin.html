@@ -373,6 +373,49 @@ button{cursor:pointer}
 .pools{bottom:-46px;height:84px}
 .pools i{background:radial-gradient(50% 50% at 50% 50%,var(--mg),transparent 72%);filter:blur(14px)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important}}
+
+/* ===== admin compact ===== */
+.app{max-width:1560px;gap:12px;padding-block:10px 24px}
+.bar{padding:7px 10px 7px 14px;gap:10px;border-radius:18px}
+.btn{padding:7px 13px;font-size:12.5px}
+.grid{gap:12px}
+@media (min-width:980px){.grid{grid-template-columns:270px 1fr}.qrcol{top:70px}}
+.panel{padding:14px 16px;border-radius:20px}
+.h2{margin:0 0 10px;font-size:11px}
+.qrtitle{font-size:22px}
+.qrsub{font-size:12.5px;margin-bottom:10px}
+.qrbox{padding:10px;border-radius:16px}
+.urlrow{margin-top:10px}.qractions{margin-top:8px}
+.rgrid{display:grid;grid-template-columns:1fr;gap:12px;min-width:0}
+.rgrid>*{min-width:0}
+@media (min-width:1280px){
+  .rgrid{grid-template-columns:1.15fr 1fr;grid-template-rows:auto auto 1fr;grid-template-areas:"k k" "b s" "q s";align-items:start}
+  .ga-k{grid-area:k}.ga-b{grid-area:b}.ga-s{grid-area:s}.ga-q{grid-area:q}
+}
+.kpis{gap:8px;grid-template-columns:repeat(auto-fit,minmax(118px,1fr))}
+.kpi{padding:9px 13px;border-radius:16px}
+.kpi b{font-size:28px}
+.kpi span{font-size:11.5px}
+#kTime{font-size:clamp(20px,2vw,24px)}
+.board{gap:5px}
+.row{grid-template-columns:24px 30px minmax(0,1fr) auto auto;gap:9px;padding:6px 10px;border-radius:13px}
+.rank{font-size:17px}
+.av{width:30px;height:30px;border-radius:10px;font-size:11.5px}
+.who .nm{font-size:13.5px}
+.st{font-size:9.5px;padding:1px 6px}
+.dots{gap:2px;margin-top:5px}.dots i{width:9px;height:5px}
+.pts b{font-size:16px}.pts span{font-size:11px}
+.tm{min-width:92px;padding-right:10px}.tm b{font-size:14px}.tm span{font-size:11px}
+.survey{gap:14px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))!important}
+.sq h3{font-size:12.5px}.sq .n{margin-bottom:6px;font-size:11px}
+.big b{font-size:30px}
+.bars{gap:4px}.bar2{font-size:12px;gap:2px 8px}.bar2 .t{height:5px}
+.qlist{gap:8px}
+.qi{font-size:12.5px;gap:4px 10px}.qi .tx small{font-size:11px}.qi .tr{height:5px}
+.empty{padding:16px 8px;font-size:13px}
+.ctaPod{padding:10px 14px;border-radius:16px}.ctaPod b{font-size:19px}
+@media (max-width:620px){.row{grid-template-columns:22px 28px minmax(0,1fr) auto}}
+@media (max-width:979px){.qrcol{order:2}.qrbox{max-width:220px;margin:0 auto}.bar{gap:8px}}
 </style>
 </head>
 <body>
@@ -423,23 +466,23 @@ button{cursor:pointer}
       <div class="copied" id="copied" role="status"></div>
     </aside>
 
-    <section style="display:flex;flex-direction:column;gap:18px;min-width:0">
-      <div class="kpis">
+    <section class="rgrid">
+      <div class="kpis ga-k">
         <div class="kpi glass live"><b id="kOnline">0</b><span>connectés</span></div>
         <div class="kpi glass"><b id="kPlaying">0</b><span>en cours</span></div>
         <div class="kpi glass"><b id="kDone">0</b><span>ont terminé</span></div>
         <div class="kpi glass"><b id="kRate">—</b><span>réussite moyenne</span></div>
         <div class="kpi glass"><b id="kTime">—</b><span>durée moyenne du quiz</span></div>
       </div>
-      <div class="panel glass">
+      <div class="panel glass ga-b">
         <h2 class="h2">Classement en direct <span class="cnt" id="boardCount"></span><span class="seg glass" role="group" aria-label="Trier par"><button type="button" id="sortScore" aria-pressed="true">Score</button><button type="button" id="sortTime" aria-pressed="false">Temps</button></span></h2>
         <div class="board" id="board"></div>
       </div>
-      <div class="panel glass">
+      <div class="panel glass ga-s">
         <h2 class="h2">Où en est l'équipe ? <span class="cnt">questions de sondage</span></h2>
         <div class="survey" id="survey"></div>
       </div>
-      <div class="panel glass">
+      <div class="panel glass ga-q">
         <h2 class="h2">Les bases : questions qui posent problème <span class="cnt">de la moins à la mieux réussie</span></h2>
         <div class="qlist" id="qlist"></div>
       </div>
@@ -693,7 +736,7 @@ function renderBoard(list){
     el.innerHTML = `<div class="rank">${i+1}</div><div class="av">${esc(initials(p.name))}</div>
       <div class="who"><div class="nm"><button class="open" type="button" data-open="${esc(p.id)}" title="Voir ses réponses">${esc(p.name)}</button> <span class="st ${p.st.key}">${p.st.label}</span></div><div class="dots">${dots}</div></div>
       <div class="tm ${p.status==="done"&&durOf(p,now)===fastest?"fast":""}"><b class="${p.status==="done"?"":"run"}" ${p.status!=="done"&&p.startedAt?`data-start="${p.startedAt}"`:""}>${fmtDur(durOf(p,now))}</b><span>${avgAns(p)!=null?`${avgAns(p).toFixed(1).replace(".",",")} s / réponse`:"pas encore de réponse"}</span></div>
-      <div class="pts"><b>${p.score||0}</b><span>${p.good||0}/${p.gt||5} justes · ${p.answered||0}/${total}</span></div>`;
+      <div class="pts"><b>${p.score||0}</b><span>${p.good||0}/${p.gt||6} justes · ${p.answered||0}/${total}</span></div>`;
     board.appendChild(el);
     if(lastScores.has(p.id) && lastScores.get(p.id)!==(p.score||0)){ el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
     lastScores.set(p.id, p.score||0);
@@ -829,7 +872,7 @@ function renderDetail(){
   $("#dName").textContent = p.name;
   $("#dSub").textContent = `${d.st.label} · commencé ${p.startedAt ? new Date(p.startedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) : "—"}${p.status==="done"&&p.finishedAt?` · terminé ${new Date(p.finishedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}`:""}`;
   $("#dKpis").innerHTML = [
-    [`${p.score||0}`, "points"], [`${p.good||0} / ${p.gt||5}`, "bonnes réponses sur les bases"],
+    [`${p.score||0}`, "points"], [`${p.good||0} / ${p.gt||6}`, "bonnes réponses sur les bases"],
     [`${p.answered||0} / ${p.total||d.rows.length}`, "questions répondues"],
     [fmtDur(d.dur), p.status==="done" ? "durée du quiz" : "en cours depuis"],
     [d.avg!=null ? d.avg.toFixed(1).replace(".",",")+" s" : "—", "temps moyen par réponse"]
@@ -855,7 +898,7 @@ $("#dlg").addEventListener("click", e=>{ if(e.target.id==="dlg") closeDetail(); 
 addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#dlg").hidden) closeDetail(); });
 $("#dCsv").addEventListener("click", ()=>{
   const d = detailData(); if(!d) return;
-  const head = [["Participant", d.p.name],["Points", d.p.score||0],["Bonnes réponses (bases)", `${d.p.good||0}/${d.p.gt||5}`],["Durée du quiz", fmtDur(d.dur)],["Attentes", d.needs.join(" | ")],[]];
+  const head = [["Participant", d.p.name],["Points", d.p.score||0],["Bonnes réponses (bases)", `${d.p.good||0}/${d.p.gt||6}`],["Durée du quiz", fmtDur(d.dur)],["Attentes", d.needs.join(" | ")],[]];
   downloadCSV(`Quiz_OneNote_${slug(d.p.name)}_${new Date().toISOString().slice(0,10)}.csv`,
     [...head, ["N°","Question","Réponse","Résultat","Bonne réponse","Temps (s)","Points"],
      ...d.rows.map(r=>[r.n, r.q, r.rep, r.res, r.good||"", r.t!=null?String(r.t).replace(".",","):"", r.pts!=null?r.pts:""])]);
@@ -863,7 +906,7 @@ $("#dCsv").addEventListener("click", ()=>{
 });
 $("#dCopy").addEventListener("click", ()=>{
   const d = detailData(); if(!d) return;
-  const txt = [`Compte rendu · ${d.p.name}`, `Points : ${d.p.score||0} · Bonnes réponses sur les bases : ${d.p.good||0}/${d.p.gt||5} · Durée : ${fmtDur(d.dur)}`,
+  const txt = [`Compte rendu · ${d.p.name}`, `Points : ${d.p.score||0} · Bonnes réponses sur les bases : ${d.p.good||0}/${d.p.gt||6} · Durée : ${fmtDur(d.dur)}`,
     d.needs.length ? `Attentes : ${d.needs.join(", ")}` : "Attentes : aucune cochée", "",
     ...d.rows.map(r=>`${r.n}. ${r.q}\n   ${r.rep} [${r.res}]${r.good?` · bonne réponse : ${r.good}`:""}${r.t!=null?` · ${String(r.t).replace(".",",")} s`:""}`)].join("\n");
   const ok = ()=> $("#dMsg").textContent = "Compte rendu copié.";
@@ -890,7 +933,7 @@ function buildPodium(){
         <div class="medal"><span>${p?esc(initials(p.name)):"·"}</span></div>
         <div class="nm3">${p?esc(p.name):"&nbsp;"}</div>
         <div class="sc3">${p?`${fmtPts(p.score)}<small>pts</small>`:"&nbsp;"}</div>
-        <div class="tm3">${p?`${p.good||0}/${p.gt||5} justes · ${fmtDur(p.dur)}`:"&nbsp;"}</div>
+        <div class="tm3">${p?`${p.good||0}/${p.gt||6} justes · ${fmtDur(p.dur)}`:"&nbsp;"}</div>
       </div>
       <div class="blk"><div class="fc tp"></div><div class="fc sl"></div><div class="fc sd"></div>
         <div class="fc fr"><span class="num">${nums[i]}<sup>${sup[nums[i]]}</sup></span><span class="plbl">${lbl[nums[i]]}</span></div></div>
