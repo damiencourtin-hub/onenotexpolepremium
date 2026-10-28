@@ -436,7 +436,7 @@ button{cursor:pointer}
         <div class="board" id="board"></div>
       </div>
       <div class="panel glass">
-        <h2 class="h2">Où en est l'équipe ? <span class="cnt">sondage · parties 1 et 3</span></h2>
+        <h2 class="h2">Où en est l'équipe ? <span class="cnt">questions de sondage</span></h2>
         <div class="survey" id="survey"></div>
       </div>
       <div class="panel glass">
@@ -693,7 +693,7 @@ function renderBoard(list){
     el.innerHTML = `<div class="rank">${i+1}</div><div class="av">${esc(initials(p.name))}</div>
       <div class="who"><div class="nm"><button class="open" type="button" data-open="${esc(p.id)}" title="Voir ses réponses">${esc(p.name)}</button> <span class="st ${p.st.key}">${p.st.label}</span></div><div class="dots">${dots}</div></div>
       <div class="tm ${p.status==="done"&&durOf(p,now)===fastest?"fast":""}"><b class="${p.status==="done"?"":"run"}" ${p.status!=="done"&&p.startedAt?`data-start="${p.startedAt}"`:""}>${fmtDur(durOf(p,now))}</b><span>${avgAns(p)!=null?`${avgAns(p).toFixed(1).replace(".",",")} s / réponse`:"pas encore de réponse"}</span></div>
-      <div class="pts"><b>${p.score||0}</b><span>${p.good||0}/${p.gt||4} justes · ${p.answered||0}/${total}</span></div>`;
+      <div class="pts"><b>${p.score||0}</b><span>${p.good||0}/${p.gt||5} justes · ${p.answered||0}/${total}</span></div>`;
     board.appendChild(el);
     if(lastScores.has(p.id) && lastScores.get(p.id)!==(p.score||0)){ el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
     lastScores.set(p.id, p.score||0);
@@ -829,7 +829,7 @@ function renderDetail(){
   $("#dName").textContent = p.name;
   $("#dSub").textContent = `${d.st.label} · commencé ${p.startedAt ? new Date(p.startedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) : "—"}${p.status==="done"&&p.finishedAt?` · terminé ${new Date(p.finishedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}`:""}`;
   $("#dKpis").innerHTML = [
-    [`${p.score||0}`, "points"], [`${p.good||0} / ${p.gt||4}`, "bonnes réponses sur les bases"],
+    [`${p.score||0}`, "points"], [`${p.good||0} / ${p.gt||5}`, "bonnes réponses sur les bases"],
     [`${p.answered||0} / ${p.total||d.rows.length}`, "questions répondues"],
     [fmtDur(d.dur), p.status==="done" ? "durée du quiz" : "en cours depuis"],
     [d.avg!=null ? d.avg.toFixed(1).replace(".",",")+" s" : "—", "temps moyen par réponse"]
@@ -855,7 +855,7 @@ $("#dlg").addEventListener("click", e=>{ if(e.target.id==="dlg") closeDetail(); 
 addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#dlg").hidden) closeDetail(); });
 $("#dCsv").addEventListener("click", ()=>{
   const d = detailData(); if(!d) return;
-  const head = [["Participant", d.p.name],["Points", d.p.score||0],["Bonnes réponses (bases)", `${d.p.good||0}/${d.p.gt||4}`],["Durée du quiz", fmtDur(d.dur)],["Attentes", d.needs.join(" | ")],[]];
+  const head = [["Participant", d.p.name],["Points", d.p.score||0],["Bonnes réponses (bases)", `${d.p.good||0}/${d.p.gt||5}`],["Durée du quiz", fmtDur(d.dur)],["Attentes", d.needs.join(" | ")],[]];
   downloadCSV(`Quiz_OneNote_${slug(d.p.name)}_${new Date().toISOString().slice(0,10)}.csv`,
     [...head, ["N°","Question","Réponse","Résultat","Bonne réponse","Temps (s)","Points"],
      ...d.rows.map(r=>[r.n, r.q, r.rep, r.res, r.good||"", r.t!=null?String(r.t).replace(".",","):"", r.pts!=null?r.pts:""])]);
@@ -863,7 +863,7 @@ $("#dCsv").addEventListener("click", ()=>{
 });
 $("#dCopy").addEventListener("click", ()=>{
   const d = detailData(); if(!d) return;
-  const txt = [`Compte rendu · ${d.p.name}`, `Points : ${d.p.score||0} · Bonnes réponses sur les bases : ${d.p.good||0}/${d.p.gt||4} · Durée : ${fmtDur(d.dur)}`,
+  const txt = [`Compte rendu · ${d.p.name}`, `Points : ${d.p.score||0} · Bonnes réponses sur les bases : ${d.p.good||0}/${d.p.gt||5} · Durée : ${fmtDur(d.dur)}`,
     d.needs.length ? `Attentes : ${d.needs.join(", ")}` : "Attentes : aucune cochée", "",
     ...d.rows.map(r=>`${r.n}. ${r.q}\n   ${r.rep} [${r.res}]${r.good?` · bonne réponse : ${r.good}`:""}${r.t!=null?` · ${String(r.t).replace(".",",")} s`:""}`)].join("\n");
   const ok = ()=> $("#dMsg").textContent = "Compte rendu copié.";
@@ -890,7 +890,7 @@ function buildPodium(){
         <div class="medal"><span>${p?esc(initials(p.name)):"·"}</span></div>
         <div class="nm3">${p?esc(p.name):"&nbsp;"}</div>
         <div class="sc3">${p?`${fmtPts(p.score)}<small>pts</small>`:"&nbsp;"}</div>
-        <div class="tm3">${p?`${p.good||0}/${p.gt||4} justes · ${fmtDur(p.dur)}`:"&nbsp;"}</div>
+        <div class="tm3">${p?`${p.good||0}/${p.gt||5} justes · ${fmtDur(p.dur)}`:"&nbsp;"}</div>
       </div>
       <div class="blk"><div class="fc tp"></div><div class="fc sl"></div><div class="fc sd"></div>
         <div class="fc fr"><span class="num">${nums[i]}<sup>${sup[nums[i]]}</sup></span><span class="plbl">${lbl[nums[i]]}</span></div></div>
